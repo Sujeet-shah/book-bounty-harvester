@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Book, Author } from '@/lib/data';
 import { searchBooks, GutendexBook, getCoverImageUrl, extractGenres } from '@/lib/gutendexApi';
-import { BookOpen, Search, Plus, ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { BookOpen, Search, Plus, ArrowLeft, ArrowRight, X, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface GutendexBookSearchProps {
   onAddBook: (book: Book) => void;
@@ -26,6 +27,7 @@ const GutendexBookSearch = ({ onAddBook, onCancel }: GutendexBookSearchProps) =>
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
+      setPage(1); // Reset to page 1 when doing a new search
       refetch();
     }
   };
@@ -63,6 +65,13 @@ const GutendexBookSearch = ({ onAddBook, onCancel }: GutendexBookSearchProps) =>
   return (
     <div className="animate-fade-in">
       <h2 className="text-xl font-semibold mb-4">Search Project Gutenberg Books</h2>
+      
+      <Alert className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Project Gutenberg contains books in the public domain (mostly published before 1927). Modern books like "The $100 Startup" won't be available.
+        </AlertDescription>
+      </Alert>
       
       {selectedBook ? (
         <div className="space-y-4">
@@ -153,7 +162,7 @@ const GutendexBookSearch = ({ onAddBook, onCancel }: GutendexBookSearchProps) =>
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full py-2 pl-10 pr-4 rounded-l-lg border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                  placeholder="Search for a book or author..."
+                  placeholder="Search classic books by title or author..."
                 />
               </div>
               <button 
@@ -188,7 +197,25 @@ const GutendexBookSearch = ({ onAddBook, onCancel }: GutendexBookSearchProps) =>
             <div className="text-center py-8">
               <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No books found</h3>
-              <p className="text-muted-foreground">Try a different search term</p>
+              <p className="text-muted-foreground mb-4">Try searching for classic literature titles or authors like:</p>
+              <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto mb-4">
+                {["Pride and Prejudice", "Mark Twain", "Sherlock Holmes", "Frankenstein", "The Great Gatsby", 
+                  "Jane Austen", "Charles Dickens", "War and Peace"].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => {
+                      setSearchTerm(suggestion);
+                      setTimeout(() => refetch(), 0);
+                    }}
+                    className="px-3 py-1 text-sm bg-muted rounded-full hover:bg-muted/80 transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Remember that Project Gutenberg only includes public domain books, mostly published before 1927.
+              </p>
             </div>
           )}
           

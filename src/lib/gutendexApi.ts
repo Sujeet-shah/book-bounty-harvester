@@ -94,3 +94,31 @@ export const extractGenres = (book: GutendexBook): string[] => {
     return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   });
 };
+
+// Helper function to extract a short description from a Gutendex book
+export const extractShortDescription = (book: GutendexBook): string => {
+  // If we have subjects, use them to create a description
+  if (book.subjects.length > 0) {
+    const topSubjects = book.subjects.slice(0, 3).map(s => {
+      const parts = s.split(/--|,/);
+      return parts[0].trim();
+    }).join(", ");
+    
+    return `A classic work about ${topSubjects}.`;
+  }
+  
+  // Fall back to a generic description with the author
+  const authorName = book.authors[0]?.name || "an unknown author";
+  return `A classic work by ${authorName}.`;
+};
+
+// Helper function to parse the page number from the next URL
+export const getPageFromUrl = (url: string | null): number => {
+  if (!url) return 1;
+  
+  const match = url.match(/page=(\d+)/);
+  if (match && match[1]) {
+    return parseInt(match[1]) - 1; // The 'next' URL points to the next page, so current is one less
+  }
+  return 1;
+};
