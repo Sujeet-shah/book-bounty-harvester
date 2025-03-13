@@ -3,6 +3,7 @@ import { Book, books as allBooks, authors as allAuthors } from '@/lib/data';
 import { Search, Edit, Trash2, Plus, Book as BookIcon, Users, BarChart3, Download, ChevronDown, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BookForm from './BookFormAudio';
+import GutendexBookSearch from './GutendexBookSearch';
 
 const AdminPanel = () => {
   const [books, setBooks] = useState<Book[]>(allBooks);
@@ -10,6 +11,7 @@ const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState<'books' | 'users' | 'analytics'>('books');
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
 
   const filteredBooks = books.filter(book => 
@@ -21,6 +23,7 @@ const AdminPanel = () => {
     setCurrentBook(book);
     setIsEditing(true);
     setIsAdding(false);
+    setIsImporting(false);
   };
 
   const handleDelete = (id: string) => {
@@ -31,6 +34,19 @@ const AdminPanel = () => {
     setCurrentBook(null);
     setIsAdding(true);
     setIsEditing(false);
+    setIsImporting(false);
+  };
+  
+  const handleImport = () => {
+    setCurrentBook(null);
+    setIsImporting(true);
+    setIsAdding(false);
+    setIsEditing(false);
+  };
+  
+  const handleAddGutendexBook = (book: Book) => {
+    setBooks([book, ...books]);
+    setIsImporting(false);
   };
 
   return (
@@ -50,13 +66,23 @@ const AdminPanel = () => {
             />
           </div>
           
-          <button 
-            onClick={handleAddNew}
-            className="flex items-center px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Book
-          </button>
+          <div className="flex space-x-2">
+            <button 
+              onClick={handleAddNew}
+              className="flex items-center px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Book
+            </button>
+            
+            <button 
+              onClick={handleImport}
+              className="flex items-center px-4 py-2 rounded-lg border bg-background text-foreground font-medium hover:bg-muted/50 transition-colors"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Import
+            </button>
+          </div>
         </div>
       </div>
       
@@ -83,7 +109,12 @@ const AdminPanel = () => {
       
       {activeTab === 'books' && (
         <>
-          {isAdding || isEditing ? (
+          {isImporting ? (
+            <GutendexBookSearch 
+              onAddBook={handleAddGutendexBook}
+              onCancel={() => setIsImporting(false)}
+            />
+          ) : isAdding || isEditing ? (
             <BookForm 
               book={currentBook} 
               onCancel={() => {
@@ -119,6 +150,7 @@ const AdminPanel = () => {
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Rating</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Genre</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Audio</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Source</th>
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
@@ -157,6 +189,13 @@ const AdminPanel = () => {
                           <span className="text-green-500 text-xs font-medium">Available</span>
                         ) : (
                           <span className="text-red-500 text-xs font-medium">None</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {book.gutenbergId ? (
+                          <span className="text-blue-500 text-xs font-medium">Gutenberg</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Custom</span>
                         )}
                       </td>
                       <td className="px-4 py-3">

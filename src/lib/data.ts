@@ -5,6 +5,16 @@ export interface Author {
   imageUrl?: string;
 }
 
+export interface BookComment {
+  id: string;
+  bookId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  date: string;
+  likes: number;
+}
+
 export interface Book {
   id: string;
   title: string;
@@ -21,6 +31,7 @@ export interface Book {
   isFeatured: boolean;
   isTrending: boolean;
   audioSummaryUrl?: string;
+  gutenbergId?: number;
 }
 
 export const authors: Author[] = [
