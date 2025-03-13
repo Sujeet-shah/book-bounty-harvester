@@ -55,6 +55,19 @@ export const getBookById = async (id: number): Promise<GutendexBook> => {
   return await response.json();
 };
 
+// Search books by category/topic
+export const searchBooksByCategory = async (category: string, page: number = 1): Promise<GutendexResponse> => {
+  // Gutendex allows searching by topic which is similar to category
+  const url = `${BASE_URL}/?topic=${encodeURIComponent(category)}&page=${page}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching books by category: ${response.statusText}`);
+  }
+  
+  return await response.json();
+};
+
 // Helper function to get a suitable cover image from a Gutendex book
 export const getCoverImageUrl = (book: GutendexBook): string => {
   const imageFormats = [
@@ -93,6 +106,64 @@ export const extractGenres = (book: GutendexBook): string[] => {
     // Capitalize the first letter
     return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   });
+};
+
+// Map common topics/subjects to standard categories
+export const mapSubjectToCategory = (subject: string): string => {
+  const subjectLower = subject.toLowerCase();
+  
+  const mappings: Record<string, string> = {
+    'fiction': 'Fiction',
+    'novel': 'Fiction',
+    'fiction, general': 'Fiction',
+    'juvenile fiction': 'Children',
+    'children': 'Children',
+    'children\'s literature': 'Children',
+    'science fiction': 'Science Fiction',
+    'adventure': 'Adventure',
+    'fantasy': 'Fantasy',
+    'mystery': 'Mystery',
+    'detective': 'Mystery',
+    'thriller': 'Thriller',
+    'horror': 'Horror',
+    'romance': 'Romance',
+    'love stories': 'Romance',
+    'historical': 'Historical Fiction',
+    'history': 'History',
+    'biography': 'Biography',
+    'autobiography': 'Biography',
+    'memoirs': 'Biography',
+    'philosophy': 'Philosophy',
+    'psychology': 'Psychology',
+    'self-help': 'Self-Help',
+    'business': 'Business',
+    'economics': 'Business',
+    'science': 'Science',
+    'technology': 'Technology',
+    'computers': 'Technology',
+    'art': 'Art',
+    'music': 'Art',
+    'poetry': 'Poetry',
+    'drama': 'Drama',
+    'plays': 'Drama',
+    'religion': 'Religion',
+    'spirituality': 'Religion',
+    'travel': 'Travel',
+    'cooking': 'Cooking',
+    'health': 'Health',
+    'sports': 'Sports',
+    'education': 'Education',
+    'reference': 'Reference'
+  };
+  
+  for (const [key, value] of Object.entries(mappings)) {
+    if (subjectLower.includes(key)) {
+      return value;
+    }
+  }
+  
+  // Default to the original subject with first letter capitalized
+  return subject.charAt(0).toUpperCase() + subject.slice(1);
 };
 
 // Helper function to extract a short description from a Gutendex book

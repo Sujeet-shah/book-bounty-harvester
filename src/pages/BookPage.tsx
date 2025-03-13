@@ -7,9 +7,11 @@ import BookDetail from '@/components/BookDetail';
 import BookCard from '@/components/BookCard';
 import AudioSummary from '@/components/AudioSummary';
 import { ArrowLeft, BookOpen } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
+import { generateBookMetaTags } from '@/lib/seo';
 
 const BookPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, slug } = useParams<{ id: string; slug: string }>();
   const [book, setBook] = useState<Book | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,49 +38,64 @@ const BookPage = () => {
     return () => clearTimeout(timer);
   }, [id]);
 
-  if (isLoading) {
+  // Handle loading state and 404
+  if (isLoading || !book) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-28 px-4">
-          <div className="max-w-4xl mx-auto animate-pulse">
-            <div className="h-8 w-32 bg-muted rounded-md mb-8"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="aspect-[3/4] rounded-xl bg-muted"></div>
-              <div className="md:col-span-2 space-y-4">
-                <div className="h-8 w-3/4 bg-muted rounded-md"></div>
-                <div className="h-6 w-1/2 bg-muted rounded-md"></div>
-                <div className="h-32 bg-muted rounded-md"></div>
-              </div>
-            </div>
+          <div className={isLoading ? "max-w-4xl mx-auto animate-pulse" : "max-w-4xl mx-auto text-center"}>
+            {isLoading ? (
+              <>
+                <div className="h-8 w-32 bg-muted rounded-md mb-8"></div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="aspect-[3/4] rounded-xl bg-muted"></div>
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="h-8 w-3/4 bg-muted rounded-md"></div>
+                    <div className="h-6 w-1/2 bg-muted rounded-md"></div>
+                    <div className="h-32 bg-muted rounded-md"></div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <Helmet>
+                  <title>Book Not Found | Book Summary App</title>
+                  <meta name="robots" content="noindex, nofollow" />
+                </Helmet>
+                <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h1 className="text-3xl font-bold mb-4">Book Not Found</h1>
+                <p className="text-muted-foreground mb-8">
+                  Sorry, we couldn't find the book you're looking for.
+                </p>
+                <Link to="/" className="btn-primary">
+                  Back to Home
+                </Link>
+              </>
+            )}
           </div>
         </main>
       </div>
     );
   }
 
-  if (!book) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="pt-28 px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h1 className="text-3xl font-bold mb-4">Book Not Found</h1>
-            <p className="text-muted-foreground mb-8">
-              Sorry, we couldn't find the book you're looking for.
-            </p>
-            <Link to="/" className="btn-primary">
-              Back to Home
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  // SEO meta tags
+  const seoData = generateBookMetaTags(book);
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{seoData.title}</title>
+        <meta name="description" content={seoData.description} />
+        <meta name="keywords" content={seoData.keywords} />
+        <meta property="og:title" content={seoData.openGraph.title} />
+        <meta property="og:description" content={seoData.openGraph.description} />
+        <meta property="og:image" content={seoData.openGraph.image} />
+        <meta property="og:url" content={seoData.openGraph.url} />
+        <meta property="og:type" content={seoData.openGraph.type} />
+        <meta name="twitter:card" content="summary_large_image" />
+      </Helmet>
+      
       <Navbar />
       
       <main className="pt-28 px-4 pb-16">
