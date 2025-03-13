@@ -104,7 +104,7 @@ export const books: Book[] = [
     title: "The 48 Laws of Power",
     author: authors[2],
     coverUrl: "https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1988&auto=format&fit=crop",
-    summary: "Amoral, cunning, ruthless, and instructive, this multi-million-copy New York Times bestseller is the definitive manual for anyone interested in gaining, observing, or defending against ultimate control – from the author of The Laws of Human Nature. In the book that People magazine proclaimed "beguiling" and "fascinating," Robert Greene and Joost Elffers have distilled three thousand years of the history of power into 48 essential laws by drawing from the philosophies of Machiavelli, Sun Tzu, and Carl Von Clausewitz and also from the lives of figures ranging from Henry Kissinger to P.T. Barnum.",
+    summary: "Amoral, cunning, ruthless, and instructive, this multi-million-copy New York Times bestseller is the definitive manual for anyone interested in gaining, observing, or defending against ultimate control – from the author of The Laws of Human Nature. In the book that People magazine proclaimed \"beguiling\" and \"fascinating,\" Robert Greene and Joost Elffers have distilled three thousand years of the history of power into 48 essential laws by drawing from the philosophies of Machiavelli, Sun Tzu, and Carl Von Clausewitz and also from the lives of figures ranging from Henry Kissinger to P.T. Barnum.",
     shortSummary: "A guide to understanding and using power dynamics for your advantage through historical examples and practical strategies.",
     genre: ["Psychology", "History", "Business"],
     dateAdded: "2023-10-20",
