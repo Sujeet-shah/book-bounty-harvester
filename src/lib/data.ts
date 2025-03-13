@@ -1,4 +1,3 @@
-
 export interface Author {
   id: string;
   name: string;
@@ -21,16 +20,7 @@ export interface Book {
   likes: number;
   isFeatured: boolean;
   isTrending: boolean;
-}
-
-export interface BookComment {
-  id: string;
-  bookId: string;
-  userName: string;
-  userAvatar?: string;
-  content: string;
-  date: string;
-  likes: number;
+  audioSummaryUrl?: string;
 }
 
 export const authors: Author[] = [
@@ -81,7 +71,8 @@ export const books: Book[] = [
     yearPublished: 2018,
     likes: 5432,
     isFeatured: true,
-    isTrending: true
+    isTrending: true,
+    audioSummaryUrl: "https://cdn.freesound.org/previews/612/612633_5674468-lq.mp3"
   },
   {
     id: "book-2",
@@ -97,7 +88,8 @@ export const books: Book[] = [
     yearPublished: 1936,
     likes: 8754,
     isFeatured: false,
-    isTrending: true
+    isTrending: true,
+    audioSummaryUrl: "https://cdn.freesound.org/previews/612/612095_11861866-lq.mp3"
   },
   {
     id: "book-3",
@@ -113,7 +105,8 @@ export const books: Book[] = [
     yearPublished: 1998,
     likes: 7654,
     isFeatured: false,
-    isTrending: false
+    isTrending: false,
+    audioSummaryUrl: "https://cdn.freesound.org/previews/615/615267_1648170-lq.mp3"
   },
   {
     id: "book-4",

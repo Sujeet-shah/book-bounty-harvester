@@ -5,6 +5,7 @@ import { Book, books as allBooks } from '@/lib/data';
 import Navbar from '@/components/Navbar';
 import BookDetail from '@/components/BookDetail';
 import BookCard from '@/components/BookCard';
+import AudioSummary from '@/components/AudioSummary';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 
 const BookPage = () => {
@@ -93,6 +94,13 @@ const BookPage = () => {
           
           {/* Book Details */}
           <BookDetail book={book} />
+          
+          {/* Audio Summary */}
+          {book.audioSummaryUrl && (
+            <div className="max-w-4xl mx-auto mt-8">
+              <AudioSummary audioUrl={book.audioSummaryUrl} title={book.title} />
+            </div>
+          )}
           
           {/* Related Books */}
           {relatedBooks.length > 0 && (
