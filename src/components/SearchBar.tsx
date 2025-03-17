@@ -35,10 +35,12 @@ const SearchBar = ({
         isFocused ? "scale-[1.02]" : "scale-100",
         className
       )}
+      role="search"
+      aria-label="Search for books"
     >
       <div className="relative w-full">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-          <Search className="h-4 w-4 text-muted-foreground" />
+          <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         </div>
         
         <input
@@ -53,6 +55,8 @@ const SearchBar = ({
             "placeholder:text-muted-foreground/70 text-foreground"
           )}
           placeholder={placeholder}
+          aria-label="Search query"
+          autoComplete="off"
         />
         
         {searchTerm && (
@@ -60,8 +64,9 @@ const SearchBar = ({
             type="button"
             onClick={clearSearch}
             className="absolute inset-y-0 right-12 flex items-center text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -70,8 +75,9 @@ const SearchBar = ({
         type="submit"
         className="absolute right-2 rounded-full bg-primary text-primary-foreground p-1.5 hover:bg-primary/90 transition-colors"
         disabled={!searchTerm}
+        aria-label="Submit search"
       >
-        <Search className="h-4 w-4" />
+        <Search className="h-4 w-4" aria-hidden="true" />
       </button>
     </form>
   );

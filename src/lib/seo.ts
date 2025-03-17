@@ -47,3 +47,68 @@ export const createSlug = (text: string): string => {
     .replace(/\s+/g, '-')     // Replace spaces with hyphens
     .replace(/-+/g, '-');     // Replace multiple hyphens with single hyphen
 };
+
+// Generate JSON-LD structured data for books (Schema.org)
+export const generateBookStructuredData = (book: Book, baseUrl: string = 'https://booksummary.app') => {
+  const bookData = {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name: book.title,
+    author: {
+      '@type': 'Person',
+      name: book.author.name
+    },
+    description: book.shortSummary || book.summary.substring(0, 160),
+    image: book.coverUrl,
+    url: `${baseUrl}/book/${book.id}/${createSlug(book.title)}`,
+    publisher: book.publisher || 'BookSummary App',
+    genre: book.genre,
+    datePublished: book.publicationDate || book.dateAdded
+  };
+
+  return JSON.stringify(bookData);
+};
+
+// Generate JSON-LD structured data for the website
+export const generateWebsiteStructuredData = (baseUrl: string = 'https://booksummary.app') => {
+  const websiteData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'BookSummary App',
+    url: baseUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${baseUrl}/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string'
+    },
+    description: 'Discover summaries of popular books across various genres. Get the key insights without reading the entire book.'
+  };
+
+  return JSON.stringify(websiteData);
+};
+
+// Generate basic meta tags for non-book pages
+export const generatePageMetaTags = (
+  title: string, 
+  description: string, 
+  keywords: string[] = []
+) => {
+  return {
+    title: `${title} | BookSummary App`,
+    description,
+    keywords: keywords.join(', '),
+    openGraph: {
+      title: `${title} | BookSummary App`,
+      description,
+      url: `/${title.toLowerCase().replace(/\s+/g, '-')}`,
+      type: 'website'
+    }
+  };
+};
+
+// Calculate reading time in minutes
+export const calculateReadingTime = (text: string): number => {
+  const wordsPerMinute = 200;
+  const numberOfWords = text.split(/\s/g).length;
+  return Math.ceil(numberOfWords / wordsPerMinute);
+};
