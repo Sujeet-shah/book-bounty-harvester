@@ -1,29 +1,63 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Book, BookComment, comments as allComments, SummarySection } from '@/lib/data';
-import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image as ImageIcon } from 'lucide-react';
+import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface BookDetailProps {
   book: Book;
 }
 
 const BookDetail = ({ book }: BookDetailProps) => {
+  const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [bookComments, setBookComments] = useState<BookComment[]>(
     allComments.filter(comment => comment.bookId === book.id)
   );
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Get current user if logged in
+  useEffect(() => {
+    const userJson = localStorage.getItem('currentUser');
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        setCurrentUser(user);
+      } catch (error) {
+        // Invalid JSON in localStorage
+        console.error("Error parsing user data:", error);
+      }
+    }
+  }, []);
 
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if user is logged in
+    const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true' || 
+                      localStorage.getItem('adminLoggedIn') === 'true';
+    
+    if (!isLoggedIn || !currentUser) {
+      toast.error('Login required', {
+        description: 'Please login to add comments',
+        action: {
+          label: 'Login',
+          onClick: () => navigate('/login', { state: { redirectTo: `/book/${book.id}` } })
+        }
+      });
+      return;
+    }
+    
     if (!newComment.trim()) return;
     
     const comment: BookComment = {
       id: `comment-${Date.now()}`,
       bookId: book.id,
-      userName: "You",
+      userName: currentUser.name || "Anonymous",
       content: newComment,
       date: new Date().toISOString(),
       likes: 0
@@ -31,6 +65,44 @@ const BookDetail = ({ book }: BookDetailProps) => {
     
     setBookComments([comment, ...bookComments]);
     setNewComment('');
+  };
+
+  const handleLikeAction = () => {
+    // Check if user is logged in
+    const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true' || 
+                      localStorage.getItem('adminLoggedIn') === 'true';
+    
+    if (!isLoggedIn) {
+      toast.error('Login required', {
+        description: 'Please login to like books',
+        action: {
+          label: 'Login',
+          onClick: () => navigate('/login', { state: { redirectTo: `/book/${book.id}` } })
+        }
+      });
+      return;
+    }
+    
+    setIsLiked(!isLiked);
+  };
+
+  const handleBookmarkAction = () => {
+    // Check if user is logged in
+    const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true' || 
+                      localStorage.getItem('adminLoggedIn') === 'true';
+    
+    if (!isLoggedIn) {
+      toast.error('Login required', {
+        description: 'Please login to bookmark books',
+        action: {
+          label: 'Login',
+          onClick: () => navigate('/login', { state: { redirectTo: `/book/${book.id}` } })
+        }
+      });
+      return;
+    }
+    
+    setIsBookmarked(!isBookmarked);
   };
 
   // Render the rich summary sections if available
@@ -83,7 +155,7 @@ const BookDetail = ({ book }: BookDetailProps) => {
           
           <div className="flex justify-between mt-4">
             <button 
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={handleLikeAction}
               className={cn(
                 "flex-1 py-2 rounded-l-lg border flex items-center justify-center transition-colors",
                 isLiked 
@@ -96,7 +168,7 @@ const BookDetail = ({ book }: BookDetailProps) => {
             </button>
             
             <button 
-              onClick={() => setIsBookmarked(!isBookmarked)}
+              onClick={handleBookmarkAction}
               className={cn(
                 "flex-1 py-2 border-t border-b flex items-center justify-center transition-colors",
                 isBookmarked 
@@ -181,12 +253,18 @@ const BookDetail = ({ book }: BookDetailProps) => {
             {/* Comment Form */}
             <form onSubmit={handleAddComment} className="flex mb-6">
               <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground mr-3 flex-shrink-0">
-                <User className="h-5 w-5" />
+                {currentUser ? (
+                  <div className="w-full h-full flex items-center justify-center font-semibold bg-primary/10 text-primary rounded-full">
+                    {currentUser.name.charAt(0).toUpperCase()}
+                  </div>
+                ) : (
+                  <User className="h-5 w-5" />
+                )}
               </div>
               <div className="flex-1 relative">
                 <input
                   type="text"
-                  placeholder="Add a comment..."
+                  placeholder={currentUser ? "Add a comment..." : "Login to comment..."}
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -194,12 +272,21 @@ const BookDetail = ({ book }: BookDetailProps) => {
                 <button 
                   type="submit"
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary disabled:text-muted-foreground"
-                  disabled={!newComment.trim()}
+                  disabled={!newComment.trim() || !currentUser}
                 >
                   <Send className="h-4 w-4" />
                 </button>
               </div>
             </form>
+            
+            {!currentUser && (
+              <div className="mb-6 p-3 bg-muted/50 rounded-lg flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4 text-primary" />
+                <span>
+                  Please <a href="/login" className="text-primary hover:underline">login</a> to leave a comment.
+                </span>
+              </div>
+            )}
             
             {/* Comments List */}
             <div className="space-y-4">

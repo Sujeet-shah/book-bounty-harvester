@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { LockKeyhole, Mail, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
+import { Helmet } from 'react-helmet-async';
 
 // Admin credentials (in a real app, this would be handled by a backend)
 const ADMIN_EMAIL = 'admin@example.com';
@@ -17,13 +18,29 @@ const ADMIN_PASSWORD = 'admin123';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  
+  // Check if we have a redirectTo in the location state
+  const redirectTo = location.state?.redirectTo || '/';
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const isAdminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+    const isUserLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+    
+    if (isAdminLoggedIn) {
+      navigate('/admin');
+    } else if (isUserLoggedIn) {
+      navigate(redirectTo);
+    }
+  }, [navigate, redirectTo]);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,34 +56,78 @@ const LoginPage = () => {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    if (values.email === ADMIN_EMAIL && values.password === ADMIN_PASSWORD) {
-      // Set admin logged in state in localStorage
-      localStorage.setItem('adminLoggedIn', 'true');
+    try {
+      // Check if admin login
+      if (values.email === ADMIN_EMAIL && values.password === ADMIN_PASSWORD) {
+        // Set admin logged in state
+        localStorage.setItem('adminLoggedIn', 'true');
+        localStorage.setItem('currentUser', JSON.stringify({
+          id: 'admin-1',
+          name: 'Admin',
+          email: ADMIN_EMAIL,
+          role: 'admin'
+        }));
+        
+        toast({
+          title: 'Login successful',
+          description: 'Welcome to the admin dashboard',
+        });
+        
+        navigate('/admin');
+        return;
+      }
       
-      toast({
-        title: 'Login successful',
-        description: 'Welcome to the admin dashboard',
-      });
+      // Check if regular user
+      const usersJson = localStorage.getItem('users');
+      const users = usersJson ? JSON.parse(usersJson) : [];
       
-      navigate('/admin');
-    } else {
+      const user = users.find((user: any) => 
+        user.email === values.email && user.password === values.password
+      );
+      
+      if (user) {
+        // Set user logged in state
+        localStorage.setItem('userLoggedIn', 'true');
+        localStorage.setItem('currentUser', JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role || 'user'
+        }));
+        
+        toast({
+          title: 'Login successful',
+          description: `Welcome back, ${user.name}!`,
+        });
+        
+        navigate(redirectTo);
+      } else {
+        throw new Error('Invalid email or password');
+      }
+    } catch (error: any) {
       toast({
         title: 'Login failed',
-        description: 'Invalid email or password',
+        description: error.message || 'Invalid email or password',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Login | Book Summary App</title>
+        <meta name="description" content="Sign in to your account to access your saved books, comments, and preferences." />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
+      
       <Navbar />
       
       <main className="pt-28 px-4 pb-16">
         <div className="max-w-md mx-auto glass-panel p-8 shadow-elegant animate-fade-in">
-          <h1 className="text-2xl font-bold mb-6 text-center">Admin Login</h1>
+          <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -80,7 +141,7 @@ const LoginPage = () => {
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input 
-                          placeholder="admin@example.com" 
+                          placeholder="you@example.com" 
                           className="pl-10"
                           {...field} 
                         />
@@ -118,7 +179,7 @@ const LoginPage = () => {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? 'Logging in...' : 'Login'}
+                {isLoading ? 'Signing in...' : 'Sign In'}
                 {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
               </Button>
             </form>
@@ -126,16 +187,19 @@ const LoginPage = () => {
           
           <div className="mt-6 text-sm text-center text-muted-foreground">
             <p>Demo credentials:</p>
-            <p className="font-mono bg-muted p-2 rounded mt-1">
-              Email: admin@example.com<br />
-              Password: admin123
-            </p>
+            <div className="font-mono bg-muted p-2 rounded mt-1 space-y-1 text-xs">
+              <p><strong>Admin:</strong> admin@example.com / admin123</p>
+              <p><strong>User:</strong> Create an account to test user features</p>
+            </div>
           </div>
           
           <div className="mt-6 text-center">
-            <Link to="/" className="text-sm text-primary hover:underline">
-              Back to Home
-            </Link>
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </p>
           </div>
         </div>
       </main>

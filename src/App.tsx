@@ -8,11 +8,13 @@ import Index from "./pages/Index";
 import BookPage from "./pages/BookPage";
 import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 import AdminGuard from "./components/AdminGuard";
 import CategoriesPage from "./pages/CategoriesPage";
 import TrendingPage from "./pages/TrendingPage";
 import AboutPage from "./pages/AboutPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/book/:id" element={<BookPage />} />
           <Route path="/book/:id/:slug" element={<BookPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/trending" element={<TrendingPage />} />
           <Route path="/about" element={<AboutPage />} />
