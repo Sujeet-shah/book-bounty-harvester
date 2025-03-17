@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import NotFound from "./pages/NotFound";
 import AdminGuard from "./components/AdminGuard";
+import UserGuard from "./components/UserGuard";
 import CategoriesPage from "./pages/CategoriesPage";
 import TrendingPage from "./pages/TrendingPage";
 import AboutPage from "./pages/AboutPage";
@@ -30,7 +31,11 @@ const App = () => (
           <Route path="/book/:id/:slug" element={<BookPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={
+            <UserGuard>
+              <ProfilePage />
+            </UserGuard>
+          } />
           <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/trending" element={<TrendingPage />} />
           <Route path="/about" element={<AboutPage />} />

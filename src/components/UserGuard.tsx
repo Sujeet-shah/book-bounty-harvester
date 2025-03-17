@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserGuardProps {
@@ -9,6 +9,7 @@ interface UserGuardProps {
 
 const UserGuard = ({ children }: UserGuardProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   useEffect(() => {
@@ -21,9 +22,10 @@ const UserGuard = ({ children }: UserGuardProps) => {
         description: 'Please login to access this feature',
         variant: 'destructive',
       });
-      navigate('/login');
+      // Redirect to login page with the intended destination
+      navigate('/login', { state: { redirectTo: location.pathname } });
     }
-  }, [navigate, toast]);
+  }, [navigate, location.pathname, toast]);
   
   return <>{children}</>;
 };
