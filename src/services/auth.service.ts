@@ -123,7 +123,7 @@ class AuthService {
         name: data.name,
         email: data.email,
         password: data.password, // In a real app, NEVER store passwords in plain text
-        role: 'user',
+        role: 'user' as const, // Fixed: Use 'as const' to ensure TypeScript recognizes this as a literal type
         dateRegistered: new Date().toISOString()
       };
       
