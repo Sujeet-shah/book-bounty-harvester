@@ -11,10 +11,7 @@ import { LockKeyhole, Mail, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import { Helmet } from 'react-helmet-async';
-
-// Admin credentials (in a real app, this would be handled by a backend)
-const ADMIN_EMAIL = 'admin@example.com';
-const ADMIN_PASSWORD = 'admin123';
+import { authService } from '@/services/auth.service';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -32,13 +29,12 @@ const LoginPage = () => {
   
   // Check if user is already logged in
   useEffect(() => {
-    const isAdminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
-    const isUserLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
-    
-    if (isAdminLoggedIn) {
-      navigate('/admin');
-    } else if (isUserLoggedIn) {
-      navigate(redirectTo);
+    if (authService.isAuthenticated()) {
+      if (authService.isAdmin()) {
+        navigate('/admin');
+      } else {
+        navigate(redirectTo);
+      }
     }
   }, [navigate, redirectTo]);
   
@@ -53,56 +49,23 @@ const LoginPage = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
     try {
-      // Check if admin login
-      if (values.email === ADMIN_EMAIL && values.password === ADMIN_PASSWORD) {
-        // Set admin logged in state
-        localStorage.setItem('adminLoggedIn', 'true');
-        localStorage.setItem('currentUser', JSON.stringify({
-          id: 'admin-1',
-          name: 'Admin',
-          email: ADMIN_EMAIL,
-          role: 'admin'
-        }));
-        
-        toast({
-          title: 'Login successful',
-          description: 'Welcome to the admin dashboard',
-        });
-        
+      const user = await authService.login({
+        email: values.email,
+        password: values.password
+      });
+      
+      toast({
+        title: 'Login successful',
+        description: user.role === 'admin' 
+          ? 'Welcome to the admin dashboard' 
+          : `Welcome back, ${user.name}!`,
+      });
+      
+      if (user.role === 'admin') {
         navigate('/admin');
-        return;
-      }
-      
-      // Check if regular user
-      const usersJson = localStorage.getItem('users');
-      const users = usersJson ? JSON.parse(usersJson) : [];
-      
-      const user = users.find((user: any) => 
-        user.email === values.email && user.password === values.password
-      );
-      
-      if (user) {
-        // Set user logged in state
-        localStorage.setItem('userLoggedIn', 'true');
-        localStorage.setItem('currentUser', JSON.stringify({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role || 'user'
-        }));
-        
-        toast({
-          title: 'Login successful',
-          description: `Welcome back, ${user.name}!`,
-        });
-        
-        navigate(redirectTo);
       } else {
-        throw new Error('Invalid email or password');
+        navigate(redirectTo);
       }
     } catch (error: any) {
       toast({

@@ -11,6 +11,7 @@ import { User, Mail, LockKeyhole, ArrowRight, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import { Helmet } from 'react-helmet-async';
+import { authService } from '@/services/auth.service';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -43,43 +44,12 @@ const RegisterPage = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
     try {
-      // In a real app, you would send this data to your backend
-      // For now, we'll just store it in localStorage
-      
-      // Check if email already exists (in a real app, this would be done by the backend)
-      const usersJson = localStorage.getItem('users');
-      const users = usersJson ? JSON.parse(usersJson) : [];
-      
-      const existingUser = users.find((user: any) => user.email === values.email);
-      if (existingUser) {
-        throw new Error('Email already registered');
-      }
-      
-      // Add the new user
-      const newUser = {
-        id: `user-${Date.now()}`,
+      const user = await authService.register({
         name: values.name,
         email: values.email,
-        password: values.password, // In a real app, NEVER store passwords in plain text
-        role: 'user',
-        dateRegistered: new Date().toISOString()
-      };
-      
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Set user as logged in
-      localStorage.setItem('userLoggedIn', 'true');
-      localStorage.setItem('currentUser', JSON.stringify({
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role
-      }));
+        password: values.password
+      });
       
       toast({
         title: 'Registration successful',

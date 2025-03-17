@@ -8,10 +8,11 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Mail, LogOut, BookOpen, Heart, MessageCircle } from 'lucide-react';
+import { User, Mail, LogOut, BookOpen, Heart, MessageCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Helmet } from 'react-helmet-async';
+import { authService, User as UserType } from '@/services/auth.service';
 
 const profileFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -19,28 +20,33 @@ const profileFormSchema = z.object({
 });
 
 const ProfilePage = () => {
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   
   useEffect(() => {
-    const userLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
-    const userJson = localStorage.getItem('currentUser');
+    // Check authentication status
+    const loadUserData = async () => {
+      try {
+        const user = authService.getCurrentUser();
+        
+        if (!user) {
+          navigate('/login', { state: { redirectTo: '/profile' } });
+          return;
+        }
+        
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+        navigate('/login');
+      } finally {
+        setIsPageLoading(false);
+      }
+    };
     
-    if (!userLoggedIn || !userJson) {
-      navigate('/login', { state: { redirectTo: '/profile' } });
-      return;
-    }
-    
-    try {
-      const user = JSON.parse(userJson);
-      setCurrentUser(user);
-    } catch (error) {
-      localStorage.removeItem('userLoggedIn');
-      localStorage.removeItem('currentUser');
-      navigate('/login');
-    }
+    loadUserData();
   }, [navigate]);
   
   const form = useForm<z.infer<typeof profileFormSchema>>({
@@ -66,33 +72,11 @@ const ProfilePage = () => {
     
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
     try {
-      // Update user in localStorage (in a real app, this would be an API call)
-      const usersJson = localStorage.getItem('users');
-      const users = usersJson ? JSON.parse(usersJson) : [];
-      
-      const updatedUsers = users.map((user: any) => {
-        if (user.id === currentUser.id) {
-          return {
-            ...user,
-            name: values.name,
-          };
-        }
-        return user;
+      const updatedUser = await authService.updateProfile({
+        name: values.name
       });
       
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-      
-      // Update current user in localStorage
-      const updatedUser = {
-        ...currentUser,
-        name: values.name,
-      };
-      
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);
       
       toast({
@@ -110,9 +94,8 @@ const ProfilePage = () => {
     }
   };
   
-  const handleLogout = () => {
-    localStorage.removeItem('userLoggedIn');
-    localStorage.removeItem('currentUser');
+  const handleLogout = async () => {
+    await authService.logout();
     
     toast({
       title: 'Logged out',
@@ -121,6 +104,14 @@ const ProfilePage = () => {
     
     navigate('/');
   };
+  
+  if (isPageLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   
   if (!currentUser) {
     return null; // Loading or redirect will happen via useEffect
