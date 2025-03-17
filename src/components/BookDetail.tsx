@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
-import { Book, BookComment, comments as allComments } from '@/lib/data';
-import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send } from 'lucide-react';
+import { Book, BookComment, comments as allComments, SummarySection } from '@/lib/data';
+import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BookDetailProps {
@@ -31,6 +31,41 @@ const BookDetail = ({ book }: BookDetailProps) => {
     
     setBookComments([comment, ...bookComments]);
     setNewComment('');
+  };
+
+  // Render the rich summary sections if available
+  const renderRichSummary = () => {
+    if (!book.richSummary) {
+      return <p className="leading-relaxed text-foreground mb-4">{book.summary}</p>;
+    }
+
+    return book.richSummary.map((section, index) => {
+      if (section.type === 'text') {
+        return (
+          <p key={index} className="leading-relaxed text-foreground mb-6">
+            {section.content}
+          </p>
+        );
+      } else if (section.type === 'image') {
+        return (
+          <figure key={index} className="mb-8">
+            <div className="aspect-video rounded-xl overflow-hidden mb-2">
+              <img 
+                src={section.content} 
+                alt={section.caption || `Image ${index + 1}`} 
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {section.caption && (
+              <figcaption className="text-sm text-center text-muted-foreground italic">
+                {section.caption}
+              </figcaption>
+            )}
+          </figure>
+        );
+      }
+      return null;
+    });
   };
 
   return (
@@ -124,9 +159,12 @@ const BookDetail = ({ book }: BookDetailProps) => {
           
           {/* Book Summary */}
           <div className="mb-10">
-            <h2 className="text-xl font-semibold mb-3">Summary</h2>
+            <h2 className="text-xl font-semibold mb-5 flex items-center">
+              <ImageIcon className="h-5 w-5 mr-2 text-primary" />
+              Summary
+            </h2>
             <div className="prose prose-gray max-w-none">
-              <p className="leading-relaxed text-foreground mb-4">{book.summary}</p>
+              {renderRichSummary()}
             </div>
           </div>
           

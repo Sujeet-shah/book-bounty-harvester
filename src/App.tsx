@@ -10,6 +10,9 @@ import AdminPage from "./pages/AdminPage";
 import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 import AdminGuard from "./components/AdminGuard";
+import CategoriesPage from "./pages/CategoriesPage";
+import TrendingPage from "./pages/TrendingPage";
+import AboutPage from "./pages/AboutPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,9 @@ const App = () => (
           <Route path="/book/:id" element={<BookPage />} />
           <Route path="/book/:id/:slug" element={<BookPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/trending" element={<TrendingPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/admin" element={
             <AdminGuard>
               <AdminPage />
