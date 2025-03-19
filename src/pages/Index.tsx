@@ -1,17 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
 import FeaturedBook from '@/components/FeaturedBook';
 import BookCard from '@/components/BookCard';
-import { Book, books as allBooks } from '@/lib/data';
+import { Book, books as defaultBooks } from '@/lib/data';
 import { Helmet } from 'react-helmet-async';
 import { generatePageMetaTags, generateWebsiteStructuredData } from '@/lib/seo';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [books, setBooks] = useState<Book[]>(allBooks);
+  const [books, setBooks] = useState<Book[]>([]);
   const [featuredBook, setFeaturedBook] = useState<Book | null>(null);
   const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
   const navigate = useNavigate();
@@ -24,19 +23,23 @@ const Index = () => {
   );
   
   useEffect(() => {
+    // Get books from localStorage if available, otherwise use default books
+    const storedBooks = localStorage.getItem('bookSummaryBooks');
+    const allBooks = storedBooks ? JSON.parse(storedBooks) : defaultBooks;
+    
     // Find a featured book
-    const featured = allBooks.find(book => book.isFeatured);
+    const featured = allBooks.find((book: Book) => book.isFeatured);
     setFeaturedBook(featured || null);
     
     // Find trending books (exclude featured)
     const trending = allBooks
-      .filter(book => book.isTrending && (!featured || book.id !== featured.id))
+      .filter((book: Book) => book.isTrending && (!featured || book.id !== featured.id))
       .slice(0, 4);
     setTrendingBooks(trending);
     
     // Filter books by search term
     if (searchTerm) {
-      const filtered = allBooks.filter(book => {
+      const filtered = allBooks.filter((book: Book) => {
         const lowerSearchTerm = searchTerm.toLowerCase();
         const titleMatch = book.title.toLowerCase().includes(lowerSearchTerm);
         const authorMatch = book.author.name.toLowerCase().includes(lowerSearchTerm);
@@ -53,10 +56,6 @@ const Index = () => {
   
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    // If the search term is empty, reset books to all books
-    if (!term) {
-      setBooks(allBooks);
-    }
   };
   
   const handleBookClick = (bookId: string) => {
@@ -108,7 +107,7 @@ const Index = () => {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                   {books.map((book) => (
-                    <BookCard key={book.id} book={book} onClick={() => handleBookClick(book.id)} />
+                    <BookCard key={book.id} book={book} onBookClick={() => handleBookClick(book.id)} />
                   ))}
                 </div>
               )}
@@ -128,7 +127,7 @@ const Index = () => {
                   <h2 className="text-2xl font-bold mb-6">Trending Now</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                     {trendingBooks.map((book) => (
-                      <BookCard key={book.id} book={book} onClick={() => handleBookClick(book.id)} />
+                      <BookCard key={book.id} book={book} onBookClick={() => handleBookClick(book.id)} />
                     ))}
                   </div>
                 </div>
@@ -139,7 +138,7 @@ const Index = () => {
                 <h2 className="text-2xl font-bold mb-6">All Books</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                   {books.map((book) => (
-                    <BookCard key={book.id} book={book} onClick={() => handleBookClick(book.id)} />
+                    <BookCard key={book.id} book={book} onBookClick={() => handleBookClick(book.id)} />
                   ))}
                 </div>
               </div>

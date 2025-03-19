@@ -1,18 +1,36 @@
 import { useState, useEffect } from 'react';
-import { Book, books as allBooks, authors as allAuthors } from '@/lib/data';
+import { Book, books as defaultBooks, authors as allAuthors } from '@/lib/data';
 import { Search, Edit, Trash2, Plus, Book as BookIcon, Users, BarChart3, Download, ChevronDown, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BookForm from './BookFormAudio';
 import GutendexBookSearch from './GutendexBookSearch';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminPanel = () => {
-  const [books, setBooks] = useState<Book[]>(allBooks);
+  const [books, setBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'books' | 'users' | 'analytics'>('books');
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const storedBooks = localStorage.getItem('bookSummaryBooks');
+    if (storedBooks) {
+      setBooks(JSON.parse(storedBooks));
+    } else {
+      setBooks(defaultBooks);
+      localStorage.setItem('bookSummaryBooks', JSON.stringify(defaultBooks));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (books.length > 0) {
+      localStorage.setItem('bookSummaryBooks', JSON.stringify(books));
+    }
+  }, [books]);
 
   const filteredBooks = books.filter(book => 
     book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -28,6 +46,10 @@ const AdminPanel = () => {
 
   const handleDelete = (id: string) => {
     setBooks(books.filter(book => book.id !== id));
+    toast({
+      title: "Book deleted",
+      description: "The book has been removed from your collection.",
+    });
   };
 
   const handleAddNew = () => {
@@ -47,6 +69,10 @@ const AdminPanel = () => {
   const handleAddGutendexBook = (book: Book) => {
     setBooks([book, ...books]);
     setIsImporting(false);
+    toast({
+      title: "Book imported",
+      description: "The book has been added to your collection.",
+    });
   };
 
   return (
@@ -132,8 +158,16 @@ const AdminPanel = () => {
                     isTrending: false
                   };
                   setBooks([newBook, ...books]);
+                  toast({
+                    title: "Book added",
+                    description: "The new book has been added to your collection.",
+                  });
                 } else {
                   setBooks(books.map(b => b.id === book.id ? book : b));
+                  toast({
+                    title: "Book updated",
+                    description: "The book details have been updated.",
+                  });
                 }
                 setIsAdding(false);
                 setIsEditing(false);
