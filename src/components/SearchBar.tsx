@@ -7,19 +7,31 @@ interface SearchBarProps {
   onSearch?: (term: string) => void;
   placeholder?: string;
   className?: string;
+  initialValue?: string;
 }
 
 const SearchBar = ({ 
   onSearch = () => {}, 
   placeholder = "Search for books, authors, or topics...",
-  className 
+  className,
+  initialValue = '', 
 }: SearchBarProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialValue);
   const [isFocused, setIsFocused] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(searchTerm);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearchTerm(newValue);
+    
+    // If search term is cleared, also trigger the onSearch with empty string
+    if (newValue === '') {
+      onSearch('');
+    }
   };
 
   const clearSearch = () => {
@@ -46,7 +58,7 @@ const SearchBar = ({
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleInputChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(

@@ -7,6 +7,7 @@ import FeaturedBook from '@/components/FeaturedBook';
 import BookCard from '@/components/BookCard';
 import { Book, books as allBooks } from '@/lib/data';
 import { Helmet } from 'react-helmet-async';
+import { generatePageMetaTags, generateWebsiteStructuredData } from '@/lib/seo';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +15,13 @@ const Index = () => {
   const [featuredBook, setFeaturedBook] = useState<Book | null>(null);
   const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
   const navigate = useNavigate();
+
+  // SEO meta tags
+  const metaTags = generatePageMetaTags(
+    'Book Summary App', 
+    'Discover summaries of popular books across various genres. Get the key insights without reading the entire book.',
+    ['book summaries', 'book insights', 'reading', 'literature', 'non-fiction', 'self-help', 'business books']
+  );
   
   useEffect(() => {
     // Find a featured book
@@ -29,10 +37,13 @@ const Index = () => {
     // Filter books by search term
     if (searchTerm) {
       const filtered = allBooks.filter(book => {
-        const titleMatch = book.title.toLowerCase().includes(searchTerm.toLowerCase());
-        const authorMatch = book.author.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const genreMatch = book.genre.some(g => g.toLowerCase().includes(searchTerm.toLowerCase()));
-        return titleMatch || authorMatch || genreMatch;
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        const titleMatch = book.title.toLowerCase().includes(lowerSearchTerm);
+        const authorMatch = book.author.name.toLowerCase().includes(lowerSearchTerm);
+        const genreMatch = book.genre.some(g => g.toLowerCase().includes(lowerSearchTerm));
+        const summaryMatch = book.shortSummary?.toLowerCase().includes(lowerSearchTerm) || 
+                             book.summary.toLowerCase().includes(lowerSearchTerm);
+        return titleMatch || authorMatch || genreMatch || summaryMatch;
       });
       setBooks(filtered);
     } else {
@@ -42,20 +53,31 @@ const Index = () => {
   
   const handleSearch = (term: string) => {
     setSearchTerm(term);
+    // If the search term is empty, reset books to all books
+    if (!term) {
+      setBooks(allBooks);
+    }
+  };
+  
+  const handleBookClick = (bookId: string) => {
+    navigate(`/book/${bookId}`);
   };
   
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Book Summary App | Discover and Read Book Summaries</title>
-        <meta name="description" content="Discover summaries of popular books across various genres. Get the key insights without reading the entire book." />
-        <meta name="keywords" content="book summaries, book insights, reading, literature, non-fiction, self-help, business books" />
-        <meta property="og:title" content="Book Summary App | Quick Book Insights" />
-        <meta property="og:description" content="Get key takeaways from the world's best books in minutes, not hours." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://booksummary.app" />
+        <title>{metaTags.title}</title>
+        <meta name="description" content={metaTags.description} />
+        <meta name="keywords" content={metaTags.keywords} />
+        <meta property="og:title" content={metaTags.openGraph.title} />
+        <meta property="og:description" content={metaTags.openGraph.description} />
+        <meta property="og:type" content={metaTags.openGraph.type} />
+        <meta property="og:url" content={metaTags.openGraph.url} />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">
+          {generateWebsiteStructuredData()}
+        </script>
       </Helmet>
       
       <Navbar />
@@ -64,7 +86,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto">
           {/* Search */}
           <div className="mb-8 max-w-2xl mx-auto">
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar onSearch={handleSearch} initialValue={searchTerm} />
           </div>
           
           {searchTerm ? (
@@ -78,7 +100,7 @@ const Index = () => {
                   <p className="text-muted-foreground mb-4">No books found matching "{searchTerm}"</p>
                   <button 
                     onClick={() => setSearchTerm('')}
-                    className="btn-secondary"
+                    className="py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                   >
                     Clear Search
                   </button>
@@ -86,7 +108,7 @@ const Index = () => {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                   {books.map((book) => (
-                    <BookCard key={book.id} book={book} />
+                    <BookCard key={book.id} book={book} onClick={() => handleBookClick(book.id)} />
                   ))}
                 </div>
               )}
@@ -106,7 +128,7 @@ const Index = () => {
                   <h2 className="text-2xl font-bold mb-6">Trending Now</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                     {trendingBooks.map((book) => (
-                      <BookCard key={book.id} book={book} />
+                      <BookCard key={book.id} book={book} onClick={() => handleBookClick(book.id)} />
                     ))}
                   </div>
                 </div>
@@ -117,7 +139,7 @@ const Index = () => {
                 <h2 className="text-2xl font-bold mb-6">All Books</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                   {books.map((book) => (
-                    <BookCard key={book.id} book={book} />
+                    <BookCard key={book.id} book={book} onClick={() => handleBookClick(book.id)} />
                   ))}
                 </div>
               </div>

@@ -61,9 +61,7 @@ export const generateBookStructuredData = (book: Book, baseUrl: string = 'https:
     description: book.shortSummary || book.summary.substring(0, 160),
     image: book.coverUrl,
     url: `${baseUrl}/book/${book.id}/${createSlug(book.title)}`,
-    // Using optional chaining for properties that might not exist in the Book interface
-    // These will be undefined if the properties don't exist
-    ...(book.yearPublished && { publisher: 'BookSummary App' }),
+    publisher: 'BookSummary App',
     genre: book.genre,
     datePublished: book.yearPublished?.toString() || book.dateAdded
   };
