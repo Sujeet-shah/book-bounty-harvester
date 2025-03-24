@@ -8,23 +8,41 @@ import { cn } from '@/lib/utils';
 interface BookCardProps {
   book: Book;
   className?: string;
+  onBookClick?: (bookId: string) => void;
 }
 
-const BookCard = ({ book, className }: BookCardProps) => {
+const BookCard = ({ book, className, onBookClick }: BookCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  
+  const handleClick = () => {
+    if (onBookClick) {
+      onBookClick(book.id);
+    }
+  };
   
   return (
     <div className={cn("book-card group", className)}>
       <div className="relative overflow-hidden rounded-lg mb-3">
-        <Link to={`/book/${book.id}`}>
-          <img 
-            src={book.coverUrl} 
-            alt={book.title} 
-            className="book-card-image"
-            loading="lazy"
-          />
-        </Link>
+        {onBookClick ? (
+          <div onClick={handleClick} className="cursor-pointer">
+            <img 
+              src={book.coverUrl} 
+              alt={book.title} 
+              className="book-card-image"
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <Link to={`/book/${book.id}`}>
+            <img 
+              src={book.coverUrl} 
+              alt={book.title} 
+              className="book-card-image"
+              loading="lazy"
+            />
+          </Link>
+        )}
         
         {/* Liked and bookmark buttons */}
         <div className="absolute top-3 right-3 flex flex-col space-y-2">
@@ -73,7 +91,11 @@ const BookCard = ({ book, className }: BookCardProps) => {
       
       <div className="flex flex-col space-y-1">
         <h3 className="font-medium line-clamp-1 group-hover:text-primary transition-colors">
-          <Link to={`/book/${book.id}`}>{book.title}</Link>
+          {onBookClick ? (
+            <div onClick={handleClick} className="cursor-pointer">{book.title}</div>
+          ) : (
+            <Link to={`/book/${book.id}`}>{book.title}</Link>
+          )}
         </h3>
         <p className="text-sm text-muted-foreground line-clamp-1">{book.author.name}</p>
         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{book.shortSummary}</p>
