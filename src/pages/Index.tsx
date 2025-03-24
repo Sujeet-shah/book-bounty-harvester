@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
 import FeaturedBook from '@/components/FeaturedBook';
@@ -14,6 +15,7 @@ const Index = () => {
   const [featuredBook, setFeaturedBook] = useState<Book | null>(null);
   const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // SEO meta tags
   const metaTags = generatePageMetaTags(
@@ -21,6 +23,13 @@ const Index = () => {
     'Discover summaries of popular books across various genres. Get the key insights without reading the entire book.',
     ['book summaries', 'book insights', 'reading', 'literature', 'non-fiction', 'self-help', 'business books']
   );
+  
+  useEffect(() => {
+    // Extract search term from URL query parameters
+    const queryParams = new URLSearchParams(location.search);
+    const searchQuery = queryParams.get('search') || '';
+    setSearchTerm(searchQuery);
+  }, [location.search]);
   
   useEffect(() => {
     // Get books from localStorage if available, otherwise use default books
@@ -56,6 +65,12 @@ const Index = () => {
   
   const handleSearch = (term: string) => {
     setSearchTerm(term);
+    // Update the URL with the search term
+    if (term) {
+      navigate(`/?search=${encodeURIComponent(term)}`);
+    } else {
+      navigate('/');
+    }
   };
   
   const handleBookClick = (bookId: string) => {
@@ -98,7 +113,7 @@ const Index = () => {
                 <div className="text-center py-12">
                   <p className="text-muted-foreground mb-4">No books found matching "{searchTerm}"</p>
                   <button 
-                    onClick={() => setSearchTerm('')}
+                    onClick={() => handleSearch('')}
                     className="py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                   >
                     Clear Search

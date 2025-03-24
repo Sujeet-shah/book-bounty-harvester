@@ -59,6 +59,11 @@ const Navbar = () => {
       navigate('/');
     }
   };
+
+  const handleSearch = (term: string) => {
+    // Navigate to home page with search term as query parameter
+    navigate(`/?search=${encodeURIComponent(term)}`);
+  };
   
   const isAdmin = currentUser?.role === 'admin';
 
@@ -115,7 +120,7 @@ const Navbar = () => {
           
           {/* Desktop right section */}
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0 space-x-4">
-            <SearchBar />
+            <SearchBar onSearch={handleSearch} />
             
             {currentUser ? (
               <DropdownMenu>
@@ -162,7 +167,7 @@ const Navbar = () => {
       {/* Mobile search bar */}
       {showSearch && isMobile && (
         <div className="px-4 pb-4">
-          <SearchBar />
+          <SearchBar onSearch={handleSearch} />
         </div>
       )}
       
@@ -279,3 +284,4 @@ const MobileNavLink = ({ to, currentPath, onClick, children }: MobileNavLinkProp
 };
 
 export default Navbar;
+
