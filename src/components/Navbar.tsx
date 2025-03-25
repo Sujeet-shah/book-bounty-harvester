@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Search, User, LogIn, Book, Clock, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,9 +11,8 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
   
-  // Listen for scroll events to add background on scroll
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -23,12 +22,10 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
-  // Close mobile menu on navigation
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
   
-  // Get login state
   useEffect(() => {
     const userLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
     const adminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
@@ -61,12 +58,10 @@ const Navbar = () => {
       isScrolled ? "bg-background/90 backdrop-blur-sm" : "bg-transparent",
     )}>
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo and Brand */}
         <Link to="/" className="flex items-center font-semibold text-xl">
           BookSummary
         </Link>
         
-        {/* Mobile Menu Button */}
         {isMobile ? (
           <button onClick={toggleMenu} className="text-gray-500">
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -86,7 +81,6 @@ const Navbar = () => {
           </nav>
         )}
         
-        {/* Auth Buttons */}
         <div className="flex items-center space-x-4">
           {isLoggedIn ? (
             <>
@@ -118,7 +112,6 @@ const Navbar = () => {
         </div>
       </div>
       
-      {/* Mobile Menu */}
       {isMobile && (
         <div className={cn(
           "fixed top-0 left-0 h-screen w-3/4 bg-background p-4 z-40 shadow-lg transform transition-transform duration-300 ease-in-out",
