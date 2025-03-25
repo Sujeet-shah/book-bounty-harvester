@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Book, BookComment, comments as allComments, SummarySection } from '@/lib/data';
+import { Book, BookComment, comments as allComments } from '@/lib/data';
 import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image as ImageIcon, AlertCircle, Book as BookIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
