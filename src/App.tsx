@@ -1,55 +1,68 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Index from "./pages/Index";
-import BookPage from "./pages/BookPage";
-import AdminPage from "./pages/AdminPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import NotFound from "./pages/NotFound";
-import AdminGuard from "./components/AdminGuard";
-import UserGuard from "./components/UserGuard";
-import CategoriesPage from "./pages/CategoriesPage";
-import TrendingPage from "./pages/TrendingPage";
-import AboutPage from "./pages/AboutPage";
-import ProfilePage from "./pages/ProfilePage";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from './components/ui/toaster';
+import { Toaster as SonnerToaster } from 'sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
 
-const queryClient = new QueryClient();
+import './App.css';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/book/:id" element={<BookPage />} />
-          <Route path="/book/:id/:slug" element={<BookPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/profile" element={
-            <UserGuard>
-              <ProfilePage />
-            </UserGuard>
-          } />
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/trending" element={<TrendingPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/admin" element={
-            <AdminGuard>
-              <AdminPage />
-            </AdminGuard>
-          } />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Pages
+import Index from './pages/Index';
+import BookPage from './pages/BookPage';
+import NotFound from './pages/NotFound';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import AboutPage from './pages/AboutPage';
+import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
+import TrendingPage from './pages/TrendingPage';
+import CategoriesPage from './pages/CategoriesPage';
+import ModernBooksPage from './pages/ModernBooksPage';
+
+// Guards
+import UserGuard from './components/UserGuard';
+import AdminGuard from './components/AdminGuard';
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/book/:id" element={<BookPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/trending" element={<TrendingPage />} />
+            <Route path="/categories" element={<CategoriesPage />} />
+            <Route path="/modern-books" element={<ModernBooksPage />} />
+            
+            {/* Protected Routes */}
+            <Route path="/profile" element={<UserGuard><ProfilePage /></UserGuard>} />
+            <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
+            
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          
+          <SonnerToaster position="top-right" />
+          <Toaster />
+        </Router>
+      </HelmetProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

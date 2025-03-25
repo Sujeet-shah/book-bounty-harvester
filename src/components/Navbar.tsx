@@ -1,287 +1,172 @@
-
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Search, User, LogOut } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
-import SearchBar from './SearchBar';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, Search, User, LogIn, Book, Clock, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
+import { useMediaQuery } from '@/hooks/use-mobile';
 
 const Navbar = () => {
-  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const { toast } = useToast();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const location = useLocation();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   
-  const toggleMenu = () => setMenuOpen(!menuOpen);
-  const closeMenu = () => setMenuOpen(false);
-  
-  // Load user data
+  // Listen for scroll events to add background on scroll
   useEffect(() => {
-    const userJson = localStorage.getItem('currentUser');
-    if (userJson) {
-      try {
-        const user = JSON.parse(userJson);
-        setCurrentUser(user);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
+  // Close mobile menu on navigation
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+  
+  // Get login state
+  useEffect(() => {
+    const userLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+    const adminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+    setIsLoggedIn(userLoggedIn || adminLoggedIn);
+  }, []);
+  
+  const navLinks = [
+    { label: 'Home', path: '/', icon: <Book className="h-4 w-4 mr-2" /> },
+    { label: 'Modern Books', path: '/modern-books', icon: <Sparkles className="h-4 w-4 mr-2" /> },
+    { label: 'Trending', path: '/trending', icon: <Clock className="h-4 w-4 mr-2" /> },
+    { label: 'Categories', path: '/categories', icon: <Search className="h-4 w-4 mr-2" /> },
+    { label: 'About', path: '/about', icon: <Book className="h-4 w-4 mr-2" /> },
+  ];
+  
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+  
   const handleLogout = () => {
-    // Clear both user and admin login state
     localStorage.removeItem('userLoggedIn');
     localStorage.removeItem('adminLoggedIn');
     localStorage.removeItem('currentUser');
-    
-    setCurrentUser(null);
-    
-    toast({
-      title: 'Logged out',
-      description: 'You have been logged out successfully',
-    });
-    
-    // Redirect to home if on a protected page
-    if (location.pathname.includes('/admin') || location.pathname.includes('/profile')) {
-      navigate('/');
-    }
-  };
-
-  const handleSearch = (term: string) => {
-    // Navigate to home page with search term as query parameter
-    navigate(`/?search=${encodeURIComponent(term)}`);
+    setIsLoggedIn(false);
+    navigate('/login');
   };
   
-  const isAdmin = currentUser?.role === 'admin';
-
   return (
-    <header className="fixed w-full z-50 backdrop-blur-md bg-background/80 border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-between items-center py-4 md:justify-start md:space-x-10">
-          {/* Logo */}
-          <div className="flex justify-start lg:w-0 lg:flex-1">
-            <Link to="/" className="font-bold text-xl" onClick={closeMenu}>
-              📚 BookSummary
-            </Link>
-          </div>
-          
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setShowSearch(!showSearch)}
-              className="p-2 rounded-md text-gray-400 hover:text-primary hover:bg-gray-100 mr-2"
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" />
-            </button>
-            <button
-              onClick={toggleMenu}
-              className="p-2 rounded-md text-gray-400 hover:text-primary hover:bg-gray-100"
-              aria-label="Open menu"
-            >
-              {menuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-          
-          {/* Desktop navigation */}
-          <nav className="hidden md:flex space-x-10">
-            <NavLink to="/categories" currentPath={location.pathname}>
-              Categories
-            </NavLink>
-            <NavLink to="/trending" currentPath={location.pathname}>
-              Trending
-            </NavLink>
-            <NavLink to="/about" currentPath={location.pathname}>
-              About
-            </NavLink>
-            {isAdmin && (
-              <NavLink to="/admin" currentPath={location.pathname}>
-                Admin
-              </NavLink>
-            )}
+    <header className={cn(
+      "fixed top-0 left-0 w-full z-50 transition-colors",
+      isScrolled ? "bg-background/90 backdrop-blur-sm" : "bg-transparent",
+    )}>
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Logo and Brand */}
+        <Link to="/" className="flex items-center font-semibold text-xl">
+          BookSummary
+        </Link>
+        
+        {/* Mobile Menu Button */}
+        {isMobile ? (
+          <button onClick={toggleMenu} className="text-gray-500">
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        ) : (
+          <nav className="flex items-center space-x-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                {link.icon}
+                <span>{link.label}</span>
+              </Link>
+            ))}
           </nav>
-          
-          {/* Desktop right section */}
-          <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0 space-x-4">
-            <SearchBar onSearch={handleSearch} />
-            
-            {currentUser ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>{currentUser.name.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem onClick={() => navigate('/admin')}>
-                      Admin Dashboard
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <>
-                <Button variant="ghost" onClick={() => navigate('/login')}>
-                  Sign in
+        )}
+        
+        {/* Auth Buttons */}
+        <div className="flex items-center space-x-4">
+          {isLoggedIn ? (
+            <>
+              <Link to="/profile">
+                <Button variant="ghost" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
                 </Button>
-                <Button onClick={() => navigate('/register')}>
-                  Sign up
+              </Link>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost" size="sm">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Login
                 </Button>
-              </>
-            )}
-          </div>
+              </Link>
+              <Link to="/register">
+                <Button variant="outline" size="sm">
+                  Register
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
       
-      {/* Mobile search bar */}
-      {showSearch && isMobile && (
-        <div className="px-4 pb-4">
-          <SearchBar onSearch={handleSearch} />
-        </div>
-      )}
-      
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <MobileNavLink to="/" onClick={closeMenu} currentPath={location.pathname}>
-              Home
-            </MobileNavLink>
-            <MobileNavLink to="/categories" onClick={closeMenu} currentPath={location.pathname}>
-              Categories
-            </MobileNavLink>
-            <MobileNavLink to="/trending" onClick={closeMenu} currentPath={location.pathname}>
-              Trending
-            </MobileNavLink>
-            <MobileNavLink to="/about" onClick={closeMenu} currentPath={location.pathname}>
-              About
-            </MobileNavLink>
-            {isAdmin && (
-              <MobileNavLink to="/admin" onClick={closeMenu} currentPath={location.pathname}>
-                Admin
-              </MobileNavLink>
-            )}
+      {/* Mobile Menu */}
+      {isMobile && (
+        <div className={cn(
+          "fixed top-0 left-0 h-screen w-3/4 bg-background p-4 z-40 shadow-lg transform transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}>
+          <div className="flex justify-end mb-4">
+            <button onClick={toggleMenu} className="text-gray-500">
+              <X className="h-6 w-6" />
+            </button>
           </div>
-          
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            {currentUser ? (
+          <nav className="flex flex-col space-y-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="flex items-center text-lg text-muted-foreground hover:text-primary transition-colors"
+              >
+                {link.icon}
+                <span>{link.label}</span>
+              </Link>
+            ))}
+            
+            {isLoggedIn ? (
               <>
-                <div className="flex items-center px-5">
-                  <div className="flex-shrink-0">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>{currentUser.name.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="ml-3">
-                    <div className="text-base font-medium">{currentUser.name}</div>
-                    <div className="text-sm text-muted-foreground">{currentUser.email}</div>
-                  </div>
-                </div>
-                <div className="mt-3 px-2 space-y-1">
-                  <MobileNavLink to="/profile" onClick={closeMenu} currentPath={location.pathname}>
-                    Your Profile
-                  </MobileNavLink>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      closeMenu();
-                    }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base text-destructive hover:bg-destructive/10"
-                  >
-                    Logout
-                  </button>
-                </div>
+                <Link to="/profile" className="flex items-center text-lg text-muted-foreground hover:text-primary transition-colors">
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </Link>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
               </>
             ) : (
-              <div className="mt-3 px-2 space-y-1">
-                <MobileNavLink to="/login" onClick={closeMenu} currentPath={location.pathname}>
-                  Sign in
-                </MobileNavLink>
-                <MobileNavLink to="/register" onClick={closeMenu} currentPath={location.pathname}>
-                  Sign up
-                </MobileNavLink>
-              </div>
+              <>
+                <Link to="/login" className="flex items-center text-lg text-muted-foreground hover:text-primary transition-colors">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Login
+                </Link>
+                <Link to="/register" className="flex items-center text-lg text-muted-foreground hover:text-primary transition-colors">
+                  Register
+                </Link>
+              </>
             )}
-          </div>
+          </nav>
         </div>
       )}
     </header>
   );
 };
 
-// Desktop navigation link
-interface NavLinkProps {
-  to: string;
-  currentPath: string;
-  children: React.ReactNode;
-}
-
-const NavLink = ({ to, currentPath, children }: NavLinkProps) => {
-  const isActive = currentPath === to || (to !== '/' && currentPath.startsWith(to));
-  return (
-    <Link
-      to={to}
-      className={`text-base font-medium transition-colors ${
-        isActive ? 'text-primary' : 'text-foreground hover:text-primary'
-      }`}
-    >
-      {children}
-    </Link>
-  );
-};
-
-// Mobile navigation link
-interface MobileNavLinkProps extends NavLinkProps {
-  onClick: () => void;
-}
-
-const MobileNavLink = ({ to, currentPath, onClick, children }: MobileNavLinkProps) => {
-  const isActive = currentPath === to || (to !== '/' && currentPath.startsWith(to));
-  return (
-    <Link
-      to={to}
-      className={`block px-3 py-2 rounded-md text-base font-medium ${
-        isActive
-          ? 'bg-primary/10 text-primary'
-          : 'text-foreground hover:bg-gray-50 hover:text-primary'
-      }`}
-      onClick={onClick}
-    >
-      {children}
-    </Link>
-  );
-};
-
 export default Navbar;
-

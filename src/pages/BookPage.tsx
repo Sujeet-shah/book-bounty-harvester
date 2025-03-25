@@ -17,9 +17,13 @@ const BookPage = () => {
   const [book, setBook] = useState<Book | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
   const [isGutenbergBook, setIsGutenbergBook] = useState(false);
+  const [isModernBook, setIsModernBook] = useState(false);
   
   // Check if this is a Gutenberg book ID
   const gutenbergId = id?.startsWith('gutenberg-') ? Number(id.replace('gutenberg-', '')) : null;
+  
+  // Check if this is a modern book ID
+  const modernBookId = id?.startsWith('modern-') ? id.replace('modern-', '') : null;
 
   // Use react-query for Gutenberg books
   const {
@@ -42,7 +46,7 @@ const BookPage = () => {
 
   // Effect to handle local books
   useEffect(() => {
-    if (!gutenbergId) {
+    if (!gutenbergId && !modernBookId) {
       // This is a regular book from our local data
       const timer = setTimeout(() => {
         const foundBook = allBooks.find(b => b.id === id) || null;
@@ -60,7 +64,45 @@ const BookPage = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [id, gutenbergId]);
+  }, [id, gutenbergId, modernBookId]);
+
+  // Effect to handle modern books
+  useEffect(() => {
+    if (modernBookId) {
+      setIsModernBook(true);
+      
+      // For this simulation, we'll create a mock book
+      // In a real app, we would fetch this from the API
+      const mockModernBook: Book = {
+        id: id!,
+        title: `Modern Book ${modernBookId}`,
+        author: {
+          id: `author-${modernBookId}`,
+          name: "Contemporary Author",
+        },
+        coverUrl: `https://source.unsplash.com/random/500x700/?book&sig=${modernBookId}`,
+        summary: "This is a modern book published after 1950. It explores contemporary themes and issues relevant to our time. The author presents a unique perspective on modern society, culture, and human experience.",
+        shortSummary: "A contemporary work exploring modern themes and society.",
+        genre: ["Contemporary", "Fiction", "Modern Literature"],
+        dateAdded: new Date().toISOString(),
+        rating: 4.3,
+        pageCount: Math.floor(Math.random() * 300) + 200,
+        yearPublished: Math.floor(Math.random() * (2023 - 1950)) + 1950,
+        likes: Math.floor(Math.random() * 100),
+        isFeatured: false,
+        isTrending: Math.random() > 0.8,
+        richSummary: [
+          {
+            type: 'text',
+            content: "This is a modern book published after 1950. It explores contemporary themes and issues relevant to our time. The author presents a unique perspective on modern society, culture, and human experience. Through compelling characters and engaging narrative, the book offers insights into the complexities of modern life. Readers will find themselves reflecting on their own experiences and perspectives as they journey through this thought-provoking work."
+          }
+        ]
+      };
+      
+      setBook(mockModernBook);
+      setRelatedBooks([]); // No related books for now
+    }
+  }, [id, modernBookId]);
 
   // Effect to convert Gutenberg book to our Book format
   useEffect(() => {
@@ -110,7 +152,7 @@ const BookPage = () => {
   }, [gutenbergBook]);
 
   // Combined loading state
-  const isLoading = (gutenbergId && isGutenbergLoading) || (!gutenbergId && !book);
+  const isLoading = (gutenbergId && isGutenbergLoading) || (!gutenbergId && !modernBookId && !book) || (modernBookId && !book);
 
   // Handle loading state and 404
   if (isLoading || !book) {
@@ -184,7 +226,7 @@ const BookPage = () => {
           </Link>
           
           {/* Book Details */}
-          <BookDetail book={book} isGutenbergBook={isGutenbergBook} />
+          <BookDetail book={book} isGutenbergBook={isGutenbergBook} isModernBook={isModernBook} />
           
           {/* Audio Summary */}
           {book.audioSummaryUrl && (

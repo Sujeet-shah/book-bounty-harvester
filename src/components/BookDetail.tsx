@@ -9,9 +9,10 @@ import { toast } from 'sonner';
 interface BookDetailProps {
   book: Book;
   isGutenbergBook?: boolean;
+  isModernBook?: boolean;
 }
 
-const BookDetail = ({ book, isGutenbergBook = false }: BookDetailProps) => {
+const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: BookDetailProps) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -141,33 +142,29 @@ const BookDetail = ({ book, isGutenbergBook = false }: BookDetailProps) => {
     });
   };
 
-  // Generate a description from subjects for Gutenberg books
-  const renderGutenbergSummary = () => {
-    if (!isGutenbergBook) {
-      return renderRichSummary();
-    }
-
-    // For Gutenberg books, create a more detailed summary based on available info
-    return (
-      <>
-        <div className="mb-6">
-          <p className="leading-relaxed text-foreground mb-4">
-            {book.summary}
-          </p>
-          {book.genre && book.genre.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-lg font-medium mb-2">Subjects:</h3>
-              <div className="flex flex-wrap gap-2">
-                {book.genre.map((genre, index) => (
-                  <span key={index} className="inline-block bg-primary/10 text-primary rounded-full px-3 py-1 text-sm">
-                    {genre}
-                  </span>
-                ))}
+  // Generate a description based on book type
+  const renderBookSummary = () => {
+    if (isGutenbergBook) {
+      // For Gutenberg books
+      return (
+        <>
+          <div className="mb-6">
+            <p className="leading-relaxed text-foreground mb-4">
+              {book.summary}
+            </p>
+            {book.genre && book.genre.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-lg font-medium mb-2">Subjects:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {book.genre.map((genre, index) => (
+                    <span key={index} className="inline-block bg-primary/10 text-primary rounded-full px-3 py-1 text-sm">
+                      {genre}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-        {isGutenbergBook && (
+            )}
+          </div>
           <div className="p-4 bg-muted/30 rounded-lg mt-6 flex items-start gap-3">
             <BookIcon className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div>
@@ -184,9 +181,47 @@ const BookDetail = ({ book, isGutenbergBook = false }: BookDetailProps) => {
               </p>
             </div>
           </div>
-        )}
-      </>
-    );
+        </>
+      );
+    } else if (isModernBook) {
+      // For modern books
+      return (
+        <>
+          <div className="mb-6">
+            {renderRichSummary()}
+            {book.genre && book.genre.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-lg font-medium mb-2">Genres:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {book.genre.map((genre, index) => (
+                    <span key={index} className="inline-block bg-primary/10 text-primary rounded-full px-3 py-1 text-sm">
+                      {genre}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="p-4 bg-muted/30 rounded-lg mt-6 flex items-start gap-3">
+            <BookIcon className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-muted-foreground">
+                This is a modern book published since 1950. Explore more contemporary titles in our 
+                <a 
+                  href="/modern-books"
+                  className="text-primary hover:underline ml-1"
+                >
+                  Modern Books section
+                </a>.
+              </p>
+            </div>
+          </div>
+        </>
+      );
+    } else {
+      // For regular books
+      return renderRichSummary();
+    }
   };
 
   return (
@@ -285,7 +320,7 @@ const BookDetail = ({ book, isGutenbergBook = false }: BookDetailProps) => {
               Summary
             </h2>
             <div className="prose prose-gray max-w-none">
-              {renderGutenbergSummary()}
+              {renderBookSummary()}
             </div>
           </div>
           
