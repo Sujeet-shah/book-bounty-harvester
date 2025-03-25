@@ -29,6 +29,7 @@ export interface GutendexBook {
     [key: string]: string;
   };
   download_count: number;
+  summaries?: string[];
 }
 
 const BASE_URL = 'https://gutendex.com/books';
@@ -70,8 +71,13 @@ export const searchBooksByCategory = async (category: string, page: number = 1):
 
 // Helper function to get a suitable cover image from a Gutendex book
 export const getCoverImageUrl = (book: GutendexBook): string => {
+  // First try to get the cover image from the formats
+  if (book.formats['image/jpeg']) {
+    return book.formats['image/jpeg'];
+  }
+  
+  // Then try other image formats
   const imageFormats = [
-    'image/jpeg',
     'image/png',
     'image/jpg'
   ];
@@ -83,8 +89,9 @@ export const getCoverImageUrl = (book: GutendexBook): string => {
     }
   }
   
-  // If no image is available, return a placeholder
-  return 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=2730&auto=format&fit=crop';
+  // If no image is available, return a placeholder based on book title for variety
+  const seed = book.title.length % 10;
+  return `https://source.unsplash.com/random/300x400/?book,${encodeURIComponent(book.title)}&sig=${seed}`;
 };
 
 // Helper function to extract genres from a Gutendex book
@@ -153,7 +160,10 @@ export const mapSubjectToCategory = (subject: string): string => {
     'health': 'Health',
     'sports': 'Sports',
     'education': 'Education',
-    'reference': 'Reference'
+    'reference': 'Reference',
+    'classic': 'Classics',
+    'classics': 'Classics',
+    'literature': 'Literature'
   };
   
   for (const [key, value] of Object.entries(mappings)) {
@@ -168,6 +178,13 @@ export const mapSubjectToCategory = (subject: string): string => {
 
 // Helper function to extract a short description from a Gutendex book
 export const extractShortDescription = (book: GutendexBook): string => {
+  // Check if book has summaries from Gutendex
+  if (book.summaries && book.summaries.length > 0) {
+    const summary = book.summaries[0];
+    // Return first 100 characters of summary
+    return summary.length > 100 ? summary.substring(0, 100) + '...' : summary;
+  }
+  
   // If we have subjects, use them to create a description
   if (book.subjects.length > 0) {
     const topSubjects = book.subjects.slice(0, 3).map(s => {
@@ -192,4 +209,42 @@ export const getPageFromUrl = (url: string | null): number => {
     return parseInt(match[1]) - 1; // The 'next' URL points to the next page, so current is one less
   }
   return 1;
+};
+
+// Get modern books (those with higher download counts are usually more popular/modern)
+export const getModernBooks = async (page: number = 1): Promise<GutendexResponse> => {
+  // Sort by download_count to get popular books which are often more modern in their appeal
+  const url = `${BASE_URL}/?sort=download_count&page=${page}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching modern books: ${response.statusText}`);
+  }
+  
+  return await response.json();
+};
+
+// Get books by multiple categories
+export const getBooksByCategories = async (): Promise<Record<string, GutendexBook[]>> => {
+  const categories = [
+    'Fiction', 'Mystery', 'Science Fiction', 'Romance', 'Adventure', 
+    'Fantasy', 'Classics', 'Biography'
+  ];
+  
+  const result: Record<string, GutendexBook[]> = {};
+  
+  // Use Promise.all to fetch books for all categories in parallel
+  await Promise.all(
+    categories.map(async (category) => {
+      try {
+        const data = await searchBooksByCategory(category);
+        result[category] = data.results.slice(0, 8); // Get up to 8 books per category
+      } catch (error) {
+        console.error(`Error fetching ${category} books:`, error);
+        result[category] = []; // Empty array if there's an error
+      }
+    })
+  );
+  
+  return result;
 };

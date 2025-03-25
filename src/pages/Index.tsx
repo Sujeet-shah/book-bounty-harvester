@@ -9,8 +9,15 @@ import { Book, books as defaultBooks } from '@/lib/data';
 import { Helmet } from 'react-helmet-async';
 import { generatePageMetaTags, generateWebsiteStructuredData } from '@/lib/seo';
 import { useQuery } from '@tanstack/react-query';
-import { searchBooks, getCoverImageUrl, extractGenres, extractShortDescription, getPageFromUrl } from '@/lib/gutendexApi';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { 
+  searchBooks, 
+  getCoverImageUrl, 
+  extractGenres, 
+  extractShortDescription, 
+  getPageFromUrl,
+  getModernBooks
+} from '@/lib/gutendexApi';
+import { ChevronLeft, ChevronRight, Loader2, BookOpen, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
@@ -68,6 +75,24 @@ const Index = () => {
     enabled: true, // Always fetch on component mount
   });
   
+  // Fetch modern books (popular downloads)
+  const { 
+    data: modernBooksData, 
+    isLoading: isLoadingModern
+  } = useQuery({
+    queryKey: ['modernBooks'],
+    queryFn: () => getModernBooks(),
+    meta: {
+      onError: (error: Error) => {
+        toast({
+          title: "Error loading modern books",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    }
+  });
+  
   // Set total pages after query success
   useEffect(() => {
     if (gutendexData) {
@@ -98,10 +123,10 @@ const Index = () => {
   }, []);
 
   // Convert Gutendex books to our Book format
-  const convertGutendexBooks = () => {
-    if (!gutendexData) return [];
+  const convertGutendexBooks = (gutendexBooks: any[]) => {
+    if (!gutendexBooks || !Array.isArray(gutendexBooks)) return [];
     
-    return gutendexData.results.map(book => {
+    return gutendexBooks.map(book => {
       const authorName = book.authors[0]?.name || 'Unknown Author';
       return {
         id: `gutenberg-${book.id}`,
@@ -126,7 +151,8 @@ const Index = () => {
     });
   };
   
-  const gutendexBooks = convertGutendexBooks();
+  const gutendexBooks = gutendexData ? convertGutendexBooks(gutendexData.results) : [];
+  const modernBooks = modernBooksData ? convertGutendexBooks(modernBooksData.results) : [];
   
   // Combine local books with Gutendex books based on search
   const displayBooks = searchTerm ? gutendexBooks : [...localBooks, ...gutendexBooks];
@@ -205,6 +231,7 @@ const Index = () => {
                 </div>
               ) : displayBooks.length === 0 ? (
                 <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground mb-4">No books found matching "{searchTerm}"</p>
                   <button 
                     onClick={() => handleSearch('')}
@@ -254,6 +281,27 @@ const Index = () => {
                   <FeaturedBook book={featuredBook} />
                 </div>
               )}
+              
+              {/* Modern Books */}
+              <div className="mb-16">
+                <div className="flex items-center mb-6">
+                  <Sparkles className="h-5 w-5 text-primary mr-2" />
+                  <h2 className="text-2xl font-bold">Modern Classics</h2>
+                </div>
+                
+                {isLoadingModern ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading modern classics...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    {modernBooks.slice(0, 10).map((book) => (
+                      <BookCard key={book.id} book={book} onBookClick={() => handleBookClick(book.id)} />
+                    ))}
+                  </div>
+                )}
+              </div>
               
               {/* Trending Books */}
               {trendingBooks.length > 0 && (
