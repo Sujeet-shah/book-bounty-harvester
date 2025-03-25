@@ -9,34 +9,108 @@ import AudioSummary from '@/components/AudioSummary';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { generateBookMetaTags } from '@/lib/seo';
+import { getBookById, GutendexBook, getCoverImageUrl, extractGenres, extractShortDescription } from '@/lib/gutendexApi';
+import { useQuery } from '@tanstack/react-query';
 
 const BookPage = () => {
   const { id, slug } = useParams<{ id: string; slug: string }>();
   const [book, setBook] = useState<Book | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isGutenbergBook, setIsGutenbergBook] = useState(false);
+  
+  // Check if this is a Gutenberg book ID
+  const gutenbergId = id?.startsWith('gutenberg-') ? Number(id.replace('gutenberg-', '')) : null;
 
-  useEffect(() => {
-    // Simulate API fetch
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      const foundBook = allBooks.find(b => b.id === id) || null;
-      setBook(foundBook);
-      
-      if (foundBook) {
-        // Get books with similar genres
-        const similar = allBooks
-          .filter(b => b.id !== foundBook.id && 
-                     b.genre.some(g => foundBook.genre.includes(g)))
-          .slice(0, 4);
-        setRelatedBooks(similar);
+  // Use react-query for Gutenberg books
+  const {
+    data: gutenbergBook,
+    isLoading: isGutenbergLoading,
+    error: gutenbergError
+  } = useQuery({
+    queryKey: ['book', gutenbergId],
+    queryFn: () => getBookById(gutenbergId!),
+    enabled: !!gutenbergId,
+    meta: {
+      onSuccess: (data: GutendexBook) => {
+        console.log('Gutenberg book loaded:', data);
+      },
+      onError: (error: Error) => {
+        console.error('Error loading Gutenberg book:', error);
       }
+    }
+  });
+
+  // Effect to handle local books
+  useEffect(() => {
+    if (!gutenbergId) {
+      // This is a regular book from our local data
+      const timer = setTimeout(() => {
+        const foundBook = allBooks.find(b => b.id === id) || null;
+        setBook(foundBook);
+        
+        if (foundBook) {
+          // Get books with similar genres
+          const similar = allBooks
+            .filter(b => b.id !== foundBook.id && 
+                      b.genre.some(g => foundBook.genre.includes(g)))
+            .slice(0, 4);
+          setRelatedBooks(similar);
+        }
+      }, 500);
       
-      setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [id]);
+      return () => clearTimeout(timer);
+    }
+  }, [id, gutenbergId]);
+
+  // Effect to convert Gutenberg book to our Book format
+  useEffect(() => {
+    if (gutenbergBook) {
+      setIsGutenbergBook(true);
+      
+      // Convert Gutenberg book to our Book format
+      const genres = extractGenres(gutenbergBook);
+      const coverUrl = getCoverImageUrl(gutenbergBook);
+      const shortSummary = extractShortDescription(gutenbergBook);
+      
+      const authorName = gutenbergBook.authors.length > 0
+        ? gutenbergBook.authors[0].name
+        : "Unknown Author";
+      
+      const convertedBook: Book = {
+        id: `gutenberg-${gutenbergBook.id}`,
+        title: gutenbergBook.title,
+        author: {
+          id: `author-gutenberg-${gutenbergBook.id}`,
+          name: authorName,
+        },
+        coverUrl: coverUrl,
+        summary: gutenbergBook.subjects.join(". ") || "A classic work of literature.",
+        shortSummary: shortSummary,
+        genre: genres,
+        dateAdded: new Date().toISOString(),
+        rating: 4.5, // Default rating
+        pageCount: Math.floor(Math.random() * 300) + 100, // Random page count
+        yearPublished: gutenbergBook.authors[0]?.birth_year || 1900,
+        likes: gutenbergBook.download_count || 0,
+        isFeatured: false,
+        isTrending: gutenbergBook.download_count > 1000,
+        richSummary: [
+          {
+            type: 'text',
+            content: gutenbergBook.subjects.join(". ") || "A classic work of literature."
+          }
+        ]
+      };
+      
+      setBook(convertedBook);
+      
+      // For related books, we'd need to make another API call, but for now let's use empty array
+      setRelatedBooks([]);
+    }
+  }, [gutenbergBook]);
+
+  // Combined loading state
+  const isLoading = (gutenbergId && isGutenbergLoading) || (!gutenbergId && !book);
 
   // Handle loading state and 404
   if (isLoading || !book) {
@@ -110,7 +184,7 @@ const BookPage = () => {
           </Link>
           
           {/* Book Details */}
-          <BookDetail book={book} />
+          <BookDetail book={book} isGutenbergBook={isGutenbergBook} />
           
           {/* Audio Summary */}
           {book.audioSummaryUrl && (

@@ -2,15 +2,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, BookComment, comments as allComments, SummarySection } from '@/lib/data';
-import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image as ImageIcon, AlertCircle, Book as BookIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface BookDetailProps {
   book: Book;
+  isGutenbergBook?: boolean;
 }
 
-const BookDetail = ({ book }: BookDetailProps) => {
+const BookDetail = ({ book, isGutenbergBook = false }: BookDetailProps) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -140,6 +141,54 @@ const BookDetail = ({ book }: BookDetailProps) => {
     });
   };
 
+  // Generate a description from subjects for Gutenberg books
+  const renderGutenbergSummary = () => {
+    if (!isGutenbergBook) {
+      return renderRichSummary();
+    }
+
+    // For Gutenberg books, create a more detailed summary based on available info
+    return (
+      <>
+        <div className="mb-6">
+          <p className="leading-relaxed text-foreground mb-4">
+            {book.summary}
+          </p>
+          {book.genre && book.genre.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-lg font-medium mb-2">Subjects:</h3>
+              <div className="flex flex-wrap gap-2">
+                {book.genre.map((genre, index) => (
+                  <span key={index} className="inline-block bg-primary/10 text-primary rounded-full px-3 py-1 text-sm">
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        {isGutenbergBook && (
+          <div className="p-4 bg-muted/30 rounded-lg mt-6 flex items-start gap-3">
+            <BookIcon className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-muted-foreground">
+                This book was added from Project Gutenberg, a library of over 60,000 free eBooks. 
+                You can read this book online or download it for free at <a 
+                  href={`https://www.gutenberg.org/ebooks/${book.id.replace('gutenberg-', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Project Gutenberg
+                </a>.
+              </p>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
@@ -194,7 +243,7 @@ const BookDetail = ({ book }: BookDetailProps) => {
           {/* Book Header */}
           <div className="mb-6">
             <div className="flex flex-wrap gap-2 mb-3">
-              {book.genre.map((genre) => (
+              {book.genre.slice(0, 3).map((genre) => (
                 <span key={genre} className="chip">
                   {genre}
                 </span>
@@ -236,7 +285,7 @@ const BookDetail = ({ book }: BookDetailProps) => {
               Summary
             </h2>
             <div className="prose prose-gray max-w-none">
-              {renderRichSummary()}
+              {renderGutenbergSummary()}
             </div>
           </div>
           

@@ -200,6 +200,77 @@ export const extractShortDescription = (book: GutendexBook): string => {
   return `A classic work by ${authorName}.`;
 };
 
+// Helper function to generate a more detailed summary from Gutendex book data
+export const generateDetailedSummary = (book: GutendexBook): string => {
+  let summary = '';
+  
+  // Start with a basic introduction
+  const authorName = book.authors[0]?.name || "an unknown author";
+  const authorYears = book.authors[0]?.birth_year && book.authors[0]?.death_year ? 
+    `(${book.authors[0].birth_year}-${book.authors[0].death_year})` : 
+    '';
+  
+  summary += `"${book.title}" is a classic work by ${authorName} ${authorYears}. `;
+  
+  // Add information about the topics
+  if (book.subjects.length > 0) {
+    const subjectSummary = book.subjects.slice(0, 5)
+      .map(s => {
+        const parts = s.split(/--|,/);
+        return parts[0].trim();
+      })
+      .join(", ");
+    
+    summary += `The book covers topics such as ${subjectSummary}. `;
+  }
+  
+  // Add information about its popularity
+  if (book.download_count) {
+    summary += `It has been downloaded ${book.download_count} times from Project Gutenberg. `;
+  }
+  
+  // Add information about languages
+  if (book.languages.length > 0) {
+    const languageNames = book.languages.map(lang => {
+      const langMap: Record<string, string> = {
+        'en': 'English',
+        'fr': 'French',
+        'es': 'Spanish',
+        'de': 'German',
+        'it': 'Italian',
+        'pt': 'Portuguese',
+        'ru': 'Russian',
+        'ja': 'Japanese',
+        'zh': 'Chinese',
+        'la': 'Latin',
+        'gr': 'Greek'
+      };
+      return langMap[lang] || lang;
+    });
+    
+    if (languageNames.length === 1) {
+      summary += `The book is available in ${languageNames[0]}. `;
+    } else {
+      const lastLang = languageNames.pop();
+      summary += `The book is available in ${languageNames.join(', ')} and ${lastLang}. `;
+    }
+  }
+  
+  // Information about available formats
+  const textFormats = [];
+  if (book.formats['text/plain; charset=utf-8']) textFormats.push('plain text');
+  if (book.formats['text/html; charset=utf-8']) textFormats.push('HTML');
+  if (book.formats['application/epub+zip']) textFormats.push('EPUB');
+  if (book.formats['application/pdf']) textFormats.push('PDF');
+  
+  if (textFormats.length > 0) {
+    const formatList = textFormats.join(', ');
+    summary += `It can be read in ${formatList} format${textFormats.length > 1 ? 's' : ''}.`;
+  }
+  
+  return summary;
+};
+
 // Helper function to parse the page number from the next URL
 export const getPageFromUrl = (url: string | null): number => {
   if (!url) return 1;
