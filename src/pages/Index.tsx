@@ -50,21 +50,33 @@ const Index = () => {
   } = useQuery({
     queryKey: ['gutendexBooks', searchTerm, page],
     queryFn: () => searchBooks(searchTerm, page),
-    onSuccess: (data) => {
-      const totalItems = data.count;
-      const itemsPerPage = 32; // Typical items per page from Gutendex
-      const calculatedPages = Math.ceil(totalItems / itemsPerPage);
-      setTotalPages(calculatedPages);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error loading books",
-        description: (error as Error).message,
-        variant: "destructive"
-      });
+    meta: {
+      onSuccess: (data) => {
+        const totalItems = data.count;
+        const itemsPerPage = 32; // Typical items per page from Gutendex
+        const calculatedPages = Math.ceil(totalItems / itemsPerPage);
+        setTotalPages(calculatedPages);
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "Error loading books",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     },
     enabled: true, // Always fetch on component mount
   });
+  
+  // Set total pages after query success
+  useEffect(() => {
+    if (gutendexData) {
+      const totalItems = gutendexData.count;
+      const itemsPerPage = 32; // Typical items per page from Gutendex
+      const calculatedPages = Math.ceil(totalItems / itemsPerPage);
+      setTotalPages(calculatedPages);
+    }
+  }, [gutendexData]);
   
   useEffect(() => {
     // Get books from localStorage if available, otherwise use default books
