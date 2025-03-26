@@ -11,7 +11,13 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(),
+    react({
+      jsxImportSource: 'react',
+      // Ensure proper JSX transformation for production
+      babel: {
+        plugins: []
+      }
+    }),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -22,4 +28,10 @@ export default defineConfig(({ mode }) => ({
   },
   // Add base path configuration
   base: "./",
+  build: {
+    // Improve sourcemaps for better debugging
+    sourcemap: true,
+    // Make sure all paths are relative
+    assetsInlineLimit: 0,
+  }
 }));
