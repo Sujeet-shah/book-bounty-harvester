@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -29,8 +28,13 @@ const ModernBooksPage = () => {
     queryKey: ['modernBooks', page],
     queryFn: () => fetchModernBooks(page, 20),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    keepPreviousData: true
+    placeholderData: keepPreviousPageData
   });
+  
+  // Function to keep the previous page data while loading
+  const keepPreviousPageData = (previousData: any) => {
+    return previousData;
+  };
   
   // Handle error
   useEffect(() => {
