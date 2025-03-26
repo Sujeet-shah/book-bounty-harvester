@@ -1,21 +1,34 @@
+
 import { useState, useEffect } from 'react';
-import { Book, books as defaultBooks, authors as allAuthors } from '@/lib/data';
+import { Book, books as defaultBooks } from '@/lib/data';
 import { Search, Edit, Trash2, Plus, Book as BookIcon, Users, BarChart3, Download, ChevronDown, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BookForm from './BookFormAudio';
 import GutendexBookSearch from './GutendexBookSearch';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
+import { fetchModernBooks, convertToAppBook } from '@/lib/modernBooksApi';
 
 const AdminPanel = () => {
   const [books, setBooks] = useState<Book[]>([]);
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'books' | 'users' | 'analytics'>('books');
+  const [showSource, setShowSource] = useState<'all' | 'local' | 'gutenberg' | 'modern'>('all');
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
   const { toast } = useToast();
 
+  // Fetch modern books for admin
+  const { data: modernBooksData } = useQuery({
+    queryKey: ['adminModernBooks'],
+    queryFn: () => fetchModernBooks(1, 50), // Fetch first 50 modern books for admin
+    staleTime: 10 * 60 * 1000 // 10 minutes
+  });
+
+  // Load local books
   useEffect(() => {
     const storedBooks = localStorage.getItem('bookSummaryBooks');
     if (storedBooks) {
@@ -26,16 +39,43 @@ const AdminPanel = () => {
     }
   }, []);
 
+  // Combine all book sources
+  useEffect(() => {
+    let combined = [...books];
+    
+    // Add modern books
+    if (modernBooksData?.books) {
+      const modernBooks = modernBooksData.books.map(book => convertToAppBook(book));
+      combined = [...combined, ...modernBooks];
+    }
+    
+    setAllBooks(combined);
+  }, [books, modernBooksData]);
+
+  // Save books to localStorage when they change
   useEffect(() => {
     if (books.length > 0) {
       localStorage.setItem('bookSummaryBooks', JSON.stringify(books));
     }
   }, [books]);
 
-  const filteredBooks = books.filter(book => 
-    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.author.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredBooks = allBooks.filter(book => {
+    // Filter by search term
+    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         book.author.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filter by source
+    let matchesSource = true;
+    if (showSource === 'local') {
+      matchesSource = !book.id.startsWith('gutenberg-') && !book.id.startsWith('modern-');
+    } else if (showSource === 'gutenberg') {
+      matchesSource = book.id.startsWith('gutenberg-');
+    } else if (showSource === 'modern') {
+      matchesSource = book.id.startsWith('modern-');
+    }
+    
+    return matchesSearch && matchesSource;
+  });
 
   const handleEdit = (book: Book) => {
     setCurrentBook(book);
@@ -45,11 +85,20 @@ const AdminPanel = () => {
   };
 
   const handleDelete = (id: string) => {
-    setBooks(books.filter(book => book.id !== id));
-    toast({
-      title: "Book deleted",
-      description: "The book has been removed from your collection.",
-    });
+    // Only delete books from local storage
+    if (!id.startsWith('gutenberg-') && !id.startsWith('modern-')) {
+      setBooks(books.filter(book => book.id !== id));
+      toast({
+        title: "Book deleted",
+        description: "The book has been removed from your collection.",
+      });
+    } else {
+      toast({
+        title: "Cannot delete external book",
+        description: "External books cannot be permanently deleted.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAddNew = () => {
@@ -73,6 +122,10 @@ const AdminPanel = () => {
       title: "Book imported",
       description: "The book has been added to your collection.",
     });
+  };
+
+  const handleFilterChange = (source: 'all' | 'local' | 'gutenberg' | 'modern') => {
+    setShowSource(source);
   };
 
   return (
@@ -163,102 +216,140 @@ const AdminPanel = () => {
                     description: "The new book has been added to your collection.",
                   });
                 } else {
-                  setBooks(books.map(b => b.id === book.id ? book : b));
-                  toast({
-                    title: "Book updated",
-                    description: "The book details have been updated.",
-                  });
+                  // Handle editing of different book types
+                  if (book.id.startsWith('modern-') || book.id.startsWith('gutenberg-')) {
+                    // For external books, just show a message
+                    toast({
+                      title: "Book updated",
+                      description: "External book details have been temporarily updated.",
+                    });
+                  } else {
+                    // For local books, update in storage
+                    setBooks(books.map(b => b.id === book.id ? book : b));
+                    toast({
+                      title: "Book updated",
+                      description: "The book details have been updated.",
+                    });
+                  }
                 }
                 setIsAdding(false);
                 setIsEditing(false);
               }}
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Cover</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Title</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Author</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Rating</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Genre</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Audio</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Source</th>
-                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBooks.map((book) => (
-                    <tr key={book.id} className="border-b border-border hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="w-12 h-16 rounded overflow-hidden">
-                          <img 
-                            src={book.coverUrl} 
-                            alt={book.title} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 font-medium">{book.title}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{book.author.name}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 mr-1" />
-                          <span>{book.rating.toFixed(1)}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          {book.genre.slice(0, 2).map((g) => (
-                            <span key={g} className="chip text-xs px-2 py-0.5">{g}</span>
-                          ))}
-                          {book.genre.length > 2 && (
-                            <span className="chip text-xs px-2 py-0.5">+{book.genre.length - 2}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {book.audioSummaryUrl ? (
-                          <span className="text-green-500 text-xs font-medium">Available</span>
-                        ) : (
-                          <span className="text-red-500 text-xs font-medium">None</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {book.gutenbergId ? (
-                          <span className="text-blue-500 text-xs font-medium">Gutenberg</span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Custom</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center space-x-2">
-                          <button 
-                            onClick={() => handleEdit(book)}
-                            className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(book.id)}
-                            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
+            <>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <SourceFilter 
+                  active={showSource === 'all'} 
+                  onClick={() => handleFilterChange('all')}
+                  label="All Books"
+                />
+                <SourceFilter 
+                  active={showSource === 'local'} 
+                  onClick={() => handleFilterChange('local')}
+                  label="Local Books"
+                />
+                <SourceFilter 
+                  active={showSource === 'gutenberg'} 
+                  onClick={() => handleFilterChange('gutenberg')}
+                  label="Gutenberg Books"
+                />
+                <SourceFilter 
+                  active={showSource === 'modern'} 
+                  onClick={() => handleFilterChange('modern')}
+                  label="Modern Books"
+                />
+              </div>
+            
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Cover</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Title</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Author</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Rating</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Genre</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Audio</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Source</th>
+                      <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              
-              {filteredBooks.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No books found matching your search.
-                </div>
-              )}
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredBooks.map((book) => (
+                      <tr key={book.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="w-12 h-16 rounded overflow-hidden">
+                            <img 
+                              src={book.coverUrl} 
+                              alt={book.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-medium">{book.title}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{book.author.name}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center">
+                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 mr-1" />
+                            <span>{book.rating.toFixed(1)}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {book.genre.slice(0, 2).map((g) => (
+                              <span key={g} className="chip text-xs px-2 py-0.5">{g}</span>
+                            ))}
+                            {book.genre.length > 2 && (
+                              <span className="chip text-xs px-2 py-0.5">+{book.genre.length - 2}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          {book.audioSummaryUrl ? (
+                            <span className="text-green-500 text-xs font-medium">Available</span>
+                          ) : (
+                            <span className="text-red-500 text-xs font-medium">None</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {book.id.startsWith('gutenberg-') ? (
+                            <span className="text-blue-500 text-xs font-medium">Gutenberg</span>
+                          ) : book.id.startsWith('modern-') ? (
+                            <span className="text-purple-500 text-xs font-medium">Modern</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Custom</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center space-x-2">
+                            <button 
+                              onClick={() => handleEdit(book)}
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(book.id)}
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              disabled={book.id.startsWith('gutenberg-') || book.id.startsWith('modern-')}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                
+                {filteredBooks.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No books found matching your search.
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </>
       )}
@@ -313,6 +404,28 @@ const AdminTab = ({
     )}
   >
     {icon}
+    {label}
+  </button>
+);
+
+const SourceFilter = ({
+  active,
+  onClick,
+  label
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "px-3 py-1.5 text-sm rounded-md transition-colors",
+      active
+        ? "bg-primary/10 text-primary font-medium"
+        : "bg-transparent text-muted-foreground hover:bg-muted"
+    )}
+  >
     {label}
   </button>
 );

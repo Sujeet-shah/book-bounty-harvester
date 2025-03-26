@@ -9,10 +9,9 @@ import { Helmet } from 'react-helmet-async';
 import { generatePageMetaTags } from '@/lib/seo';
 import { ChevronLeft, ChevronRight, Loader2, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 
 const ModernBooksPage = () => {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
@@ -20,36 +19,37 @@ const ModernBooksPage = () => {
   
   // SEO meta tags
   const metaTags = generatePageMetaTags(
-    'Modern Books (1950-Present) | Book Summary App', 
-    'Discover summaries of popular modern books published from 1950 to today across various genres.',
-    ['modern books', 'contemporary literature', 'book summaries', 'post-1950 books', 'reading']
+    'Modern Books | Book Summary App', 
+    'Discover summaries of popular modern books across various genres.',
+    ['modern books', 'contemporary literature', 'book summaries', 'reading']
   );
   
+  // Use React Query for data fetching
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['modernBooks', page],
+    queryFn: () => fetchModernBooks(page, 20),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    keepPreviousData: true
+  });
+  
+  // Handle error
   useEffect(() => {
-    const loadBooks = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetchModernBooks(page, 20);
-        
-        // Convert the books to our app format
-        const formattedBooks = response.books.map(book => convertToAppBook(book));
-        
-        setBooks(formattedBooks);
-        setTotalPages(Math.ceil(response.total / 20));
-      } catch (error) {
-        console.error('Error loading modern books:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load modern books. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadBooks();
-  }, [page, toast]);
+    if (error) {
+      console.error('Error loading modern books:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load books. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }, [error, toast]);
+  
+  // Update total pages when data is loaded
+  useEffect(() => {
+    if (data) {
+      setTotalPages(Math.ceil(data.total / 20));
+    }
+  }, [data]);
   
   const handleBookClick = (bookId: string) => {
     navigate(`/book/${bookId}`);
@@ -64,6 +64,9 @@ const ModernBooksPage = () => {
     setPage(prev => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   };
+  
+  // Convert API books to our Book format
+  const books: Book[] = data?.books.map(book => convertToAppBook(book)) || [];
   
   return (
     <div className="min-h-screen bg-background">
@@ -83,16 +86,12 @@ const ModernBooksPage = () => {
       
       <main className="pt-24 px-4 pb-16">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Modern Books (1950-Present)</h1>
-          <p className="text-muted-foreground mb-8">
-            Explore a collection of 5,000 modern books published from 1950 to the present day.
-            Discover summaries, reviews, and insights across various genres.
-          </p>
+          <h1 className="text-3xl font-bold mb-6">Modern Books</h1>
           
           {isLoading ? (
             <div className="text-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading modern books...</p>
+              <p className="text-muted-foreground">Loading books...</p>
             </div>
           ) : books.length === 0 ? (
             <div className="text-center py-12">

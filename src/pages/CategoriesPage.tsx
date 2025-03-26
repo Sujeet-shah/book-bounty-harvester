@@ -5,7 +5,6 @@ import Navbar from '@/components/Navbar';
 import BookCard from '@/components/BookCard';
 import { Book, books as allBooks } from '@/lib/data';
 import { Helmet } from 'react-helmet-async';
-import { createSlug } from '@/lib/seo';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { 
   searchBooksByCategory, 
@@ -23,14 +22,14 @@ const CategoriesPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Fetch categories and books by category
+  // Fetch categories and books by category with improved settings
   const { data: categoryBooks, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ['booksByCategories'],
     queryFn: getBooksByCategories,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
     meta: {
       onError: (error: Error) => {
         toast({
@@ -42,11 +41,12 @@ const CategoriesPage = () => {
     }
   });
   
-  // Fetch books for a specific category when selected
+  // Fetch books for a specific category when selected - faster loading
   const { data: selectedCategoryBooks, isLoading: isSelectedCategoryLoading } = useQuery({
     queryKey: ['categoryBooks', selectedCategory],
     queryFn: () => searchBooksByCategory(selectedCategory || ''),
     enabled: !!selectedCategory,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
     meta: {
       onError: (error: Error) => {
         toast({
@@ -84,8 +84,6 @@ const CategoriesPage = () => {
     } else {
       setFilteredBooks([]);
     }
-    
-    setIsLoading(false);
   }, [selectedCategory]);
   
   // Convert Gutendex book to our Book format

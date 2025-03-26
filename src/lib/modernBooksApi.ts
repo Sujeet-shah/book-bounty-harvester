@@ -1,4 +1,3 @@
-
 import { Book } from './data';
 
 // Interface for modern books API response
@@ -18,10 +17,13 @@ interface ModernBook {
   rating: number;
 }
 
+// Cache of generated books to ensure consistency
+const bookCache = new Map<string, Book>();
+
 // This would normally fetch from a real API, but we'll simulate it
 export const fetchModernBooks = async (page: number = 1, limit: number = 20): Promise<ModernBooksResponse> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // Simulate API call delay but keep it short
+  await new Promise(resolve => setTimeout(resolve, 300));
   
   // Generate 5000 books in batches
   const startIndex = (page - 1) * limit;
@@ -33,7 +35,28 @@ export const fetchModernBooks = async (page: number = 1, limit: number = 20): Pr
     const currentYear = new Date().getFullYear();
     const publishedYear = Math.floor(Math.random() * (currentYear - 1950)) + 1950;
     
-    books.push(generateModernBook(i, publishedYear));
+    // Generate the book or retrieve from cache
+    const bookId = `${i}`;
+    let book: ModernBook;
+    
+    const cachedBook = bookCache.get(`modern-${bookId}`);
+    if (cachedBook) {
+      // Convert cached book back to ModernBook format
+      book = {
+        id: bookId,
+        title: cachedBook.title,
+        author: cachedBook.author.name,
+        summary: cachedBook.summary,
+        coverImage: cachedBook.coverUrl,
+        publishedYear: cachedBook.yearPublished || publishedYear,
+        genres: cachedBook.genre,
+        rating: cachedBook.rating
+      };
+    } else {
+      book = generateModernBook(i, publishedYear);
+    }
+    
+    books.push(book);
   }
   
   return {
@@ -42,9 +65,37 @@ export const fetchModernBooks = async (page: number = 1, limit: number = 20): Pr
   };
 };
 
+// Fetch a single modern book by ID
+export const fetchModernBookById = async (id: string): Promise<Book> => {
+  // Check cache first
+  const cachedBook = bookCache.get(`modern-${id}`);
+  if (cachedBook) {
+    return cachedBook;
+  }
+  
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  // Parse the ID to get the index
+  const index = parseInt(id);
+  const currentYear = new Date().getFullYear();
+  const publishedYear = Math.floor(Math.random() * (currentYear - 1950)) + 1950;
+  
+  // Generate the book
+  const modernBook = generateModernBook(index, publishedYear);
+  
+  // Convert to our Book format
+  const book = convertToAppBook(modernBook);
+  
+  // Cache the book
+  bookCache.set(book.id, book);
+  
+  return book;
+};
+
 // Convert modern book format to our app's Book format
 export const convertToAppBook = (book: ModernBook): Book => {
-  return {
+  const appBook: Book = {
     id: `modern-${book.id}`,
     title: book.title,
     author: {
@@ -68,50 +119,65 @@ export const convertToAppBook = (book: ModernBook): Book => {
       }
     ]
   };
+  
+  return appBook;
 };
+
+// Book title components for more realistic titles
+const titlePrefixes = [
+  'The', 'A', 'Secret', 'Lost', 'Hidden', 'Forgotten', 'Last', 'First',
+  'New', 'Ancient', 'Modern', 'Eternal', 'Infinite', 'Dark', 'Bright',
+  'Silent', 'Loud', 'Quiet', 'Brave', 'Fearless', 'Mysterious', 'Radiant',
+  'Shattered', 'Broken', 'Healed', 'Perfect', 'Imperfect', 'Sacred', 'Stolen',
+  'Golden', 'Silver', 'Midnight', 'Burning', 'Frozen', 'Electric', 'Velvet'
+];
+
+const titleNouns = [
+  'Road', 'Mountain', 'River', 'Forest', 'City', 'Ocean', 'Sky', 'Star',
+  'Moon', 'Sun', 'Dream', 'Memory', 'Hope', 'Love', 'Journey', 'Adventure',
+  'Mystery', 'Secret', 'Truth', 'Lie', 'Song', 'Dance', 'Story', 'Tale',
+  'History', 'Future', 'Past', 'Present', 'Life', 'Death', 'Heart', 'Soul',
+  'Shadow', 'Light', 'Fire', 'Water', 'Earth', 'Air', 'Child', 'Garden',
+  'House', 'World', 'Universe', 'Kingdom', 'Empire', 'Mind', 'Spirit', 'Voice'
+];
+
+const titleSuffixes = [
+  'of Time', 'of Space', 'of Light', 'of Darkness', 'of the Heart',
+  'of the Mind', 'of the Soul', 'of the World', 'of the Universe',
+  'of Tomorrow', 'of Yesterday', 'of Dreams', 'of Memories',
+  'of Shadows', 'of Echoes', 'of Whispers', 'of Silence',
+  'of Eternity', 'of Infinity', 'of Destiny', 'of Fate', 'of Fortune',
+  'of Courage', 'of Honor', 'of Truth', 'of Lies', 'of Secrets',
+  'of Passion', 'of Desire', 'of Hope', 'of Despair', 'of Joy',
+  'of Sorrow', 'in Bloom', 'in Ruins', 'in Chains', 'in Flight'
+];
+
+// Well-known authors for modern books
+const authors = [
+  'Margaret Atwood', 'Haruki Murakami', 'Toni Morrison', 'Stephen King', 
+  'J.K. Rowling', 'George R.R. Martin', 'Neil Gaiman', 'Chimamanda Ngozi Adichie',
+  'Donna Tartt', 'Khaled Hosseini', 'Dan Brown', 'Malcolm Gladwell',
+  'Yuval Noah Harari', 'Michelle Obama', 'Ta-Nehisi Coates', 'Zadie Smith',
+  'Cormac McCarthy', 'Ian McEwan', 'Gillian Flynn', 'Colson Whitehead',
+  'Gabriel García Márquez', 'Alice Walker', 'Isabel Allende', 'John Grisham',
+  'James Patterson', 'Paulo Coelho', 'Jhumpa Lahiri', 'Arundhati Roy'
+];
+
+// Popular modern genres
+const genres = [
+  'Fiction', 'Non-fiction', 'Science Fiction', 'Fantasy', 'Mystery', 
+  'Thriller', 'Romance', 'Historical Fiction', 'Biography', 'Self-help',
+  'Business', 'Science', 'Technology', 'Philosophy', 'Psychology',
+  'Politics', 'Travel', 'Cooking', 'Art', 'Music', 'Crime', 'Young Adult',
+  'Dystopian', 'Contemporary', 'Memoir', 'Horror', 'Literary Fiction'
+];
 
 // Generate a modern book with realistic data
 const generateModernBook = (index: number, publishedYear: number): ModernBook => {
-  const genres = [
-    'Fiction', 'Non-fiction', 'Science Fiction', 'Fantasy', 'Mystery', 
-    'Thriller', 'Romance', 'Historical Fiction', 'Biography', 'Self-help',
-    'Business', 'Science', 'Technology', 'Philosophy', 'Psychology',
-    'Politics', 'Travel', 'Cooking', 'Art', 'Music'
-  ];
-  
-  const authors = [
-    'Margaret Atwood', 'Haruki Murakami', 'Toni Morrison', 'Stephen King', 
-    'J.K. Rowling', 'George R.R. Martin', 'Neil Gaiman', 'Chimamanda Ngozi Adichie',
-    'Donna Tartt', 'Khaled Hosseini', 'Dan Brown', 'Malcolm Gladwell',
-    'Yuval Noah Harari', 'Michelle Obama', 'Ta-Nehisi Coates', 'Zadie Smith',
-    'Cormac McCarthy', 'Ian McEwan', 'Gillian Flynn', 'Colson Whitehead'
-  ];
-  
-  const titlePrefixes = [
-    'The', 'A', 'Secret', 'Lost', 'Hidden', 'Forgotten', 'Last', 'First',
-    'New', 'Ancient', 'Modern', 'Eternal', 'Infinite', 'Dark', 'Bright',
-    'Silent', 'Loud', 'Quiet', 'Brave', 'Fearless'
-  ];
-  
-  const titleNouns = [
-    'Road', 'Mountain', 'River', 'Forest', 'City', 'Ocean', 'Sky', 'Star',
-    'Moon', 'Sun', 'Dream', 'Memory', 'Hope', 'Love', 'Journey', 'Adventure',
-    'Mystery', 'Secret', 'Truth', 'Lie', 'Song', 'Dance', 'Story', 'Tale',
-    'History', 'Future', 'Past', 'Present', 'Life', 'Death'
-  ];
-  
-  const titleSuffixes = [
-    'of Time', 'of Space', 'of Light', 'of Darkness', 'of the Heart',
-    'of the Mind', 'of the Soul', 'of the World', 'of the Universe',
-    'of Tomorrow', 'of Yesterday', 'of Dreams', 'of Memories',
-    'of Shadows', 'of Echoes', 'of Whispers', 'of Silence',
-    'of Eternity', 'of Infinity', 'of Destiny'
-  ];
-  
   // Generate a random title
   const titlePrefix = titlePrefixes[Math.floor(Math.random() * titlePrefixes.length)];
   const titleNoun = titleNouns[Math.floor(Math.random() * titleNouns.length)];
-  const useSuffix = Math.random() > 0.5;
+  const useSuffix = Math.random() > 0.3;
   const titleSuffix = useSuffix ? ' ' + titleSuffixes[Math.floor(Math.random() * titleSuffixes.length)] : '';
   const title = `${titlePrefix} ${titleNoun}${titleSuffix}`;
   

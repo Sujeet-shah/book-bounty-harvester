@@ -10,10 +10,11 @@ import { ArrowLeft, BookOpen } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { generateBookMetaTags } from '@/lib/seo';
 import { getBookById, GutendexBook, getCoverImageUrl, extractGenres, extractShortDescription } from '@/lib/gutendexApi';
+import { fetchModernBookById } from '@/lib/modernBooksApi';
 import { useQuery } from '@tanstack/react-query';
 
 const BookPage = () => {
-  const { id, slug } = useParams<{ id: string; slug: string }>();
+  const { id } = useParams<{ id: string }>();
   const [book, setBook] = useState<Book | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
   const [isGutenbergBook, setIsGutenbergBook] = useState(false);
@@ -28,8 +29,7 @@ const BookPage = () => {
   // Use react-query for Gutenberg books
   const {
     data: gutenbergBook,
-    isLoading: isGutenbergLoading,
-    error: gutenbergError
+    isLoading: isGutenbergLoading
   } = useQuery({
     queryKey: ['book', gutenbergId],
     queryFn: () => getBookById(gutenbergId!),
@@ -40,6 +40,24 @@ const BookPage = () => {
       },
       onError: (error: Error) => {
         console.error('Error loading Gutenberg book:', error);
+      }
+    }
+  });
+
+  // Use react-query for Modern books
+  const {
+    data: modernBook,
+    isLoading: isModernLoading
+  } = useQuery({
+    queryKey: ['modernBook', modernBookId],
+    queryFn: () => fetchModernBookById(modernBookId!),
+    enabled: !!modernBookId,
+    meta: {
+      onSuccess: (data: Book) => {
+        console.log('Modern book loaded:', data);
+      },
+      onError: (error: Error) => {
+        console.error('Error loading Modern book:', error);
       }
     }
   });
@@ -60,49 +78,22 @@ const BookPage = () => {
             .slice(0, 4);
           setRelatedBooks(similar);
         }
-      }, 500);
+      }, 300); // Reduced timer for faster loading
       
       return () => clearTimeout(timer);
     }
   }, [id, gutenbergId, modernBookId]);
 
-  // Effect to handle modern books
+  // Effect for modern books
   useEffect(() => {
-    if (modernBookId) {
+    if (modernBook) {
       setIsModernBook(true);
+      setBook(modernBook);
       
-      // For this simulation, we'll create a mock book
-      // In a real app, we would fetch this from the API
-      const mockModernBook: Book = {
-        id: id!,
-        title: `Modern Book ${modernBookId}`,
-        author: {
-          id: `author-${modernBookId}`,
-          name: "Contemporary Author",
-        },
-        coverUrl: `https://source.unsplash.com/random/500x700/?book&sig=${modernBookId}`,
-        summary: "This is a modern book published after 1950. It explores contemporary themes and issues relevant to our time. The author presents a unique perspective on modern society, culture, and human experience.",
-        shortSummary: "A contemporary work exploring modern themes and society.",
-        genre: ["Contemporary", "Fiction", "Modern Literature"],
-        dateAdded: new Date().toISOString(),
-        rating: 4.3,
-        pageCount: Math.floor(Math.random() * 300) + 200,
-        yearPublished: Math.floor(Math.random() * (2023 - 1950)) + 1950,
-        likes: Math.floor(Math.random() * 100),
-        isFeatured: false,
-        isTrending: Math.random() > 0.8,
-        richSummary: [
-          {
-            type: 'text',
-            content: "This is a modern book published after 1950. It explores contemporary themes and issues relevant to our time. The author presents a unique perspective on modern society, culture, and human experience. Through compelling characters and engaging narrative, the book offers insights into the complexities of modern life. Readers will find themselves reflecting on their own experiences and perspectives as they journey through this thought-provoking work."
-          }
-        ]
-      };
-      
-      setBook(mockModernBook);
-      setRelatedBooks([]); // No related books for now
+      // Get related modern books (could be expanded in the future)
+      setRelatedBooks([]);
     }
-  }, [id, modernBookId]);
+  }, [modernBook]);
 
   // Effect to convert Gutenberg book to our Book format
   useEffect(() => {
@@ -152,7 +143,7 @@ const BookPage = () => {
   }, [gutenbergBook]);
 
   // Combined loading state
-  const isLoading = (gutenbergId && isGutenbergLoading) || (!gutenbergId && !modernBookId && !book) || (modernBookId && !book);
+  const isLoading = (gutenbergId && isGutenbergLoading) || (modernBookId && isModernLoading) || (!gutenbergId && !modernBookId && !book);
 
   // Handle loading state and 404
   if (isLoading || !book) {

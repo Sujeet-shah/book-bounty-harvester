@@ -3,12 +3,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import AdminPanel from '@/components/AdminPanel';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 const AdminPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
-
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
