@@ -16,17 +16,28 @@ const ModernBooksPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // SEO meta tags
+  // Function to keep the previous page data while loading
+  function keepPreviousPageData(previousData: any) {
+    return previousData;
+  }
+  
+  // Enhanced SEO meta tags
   const metaTags = generatePageMetaTags(
     'Modern Books | Book Summary App', 
-    'Discover summaries of popular modern books across various genres.',
-    ['modern books', 'contemporary literature', 'book summaries', 'reading']
+    'Discover summaries of popular modern books across various genres. Access insights from contemporary literature and bestselling titles.',
+    [
+      'modern books', 
+      'contemporary literature', 
+      'book summaries', 
+      'reading',
+      'current bestsellers',
+      'popular fiction',
+      'new releases',
+      'book reviews',
+      'book insights',
+      'recent publications'
+    ]
   );
-  
-  // Function to keep the previous page data while loading
-  const keepPreviousPageData = (previousData: any) => {
-    return previousData;
-  };
   
   // Use React Query for data fetching
   const { data, isLoading, error } = useQuery({
@@ -84,6 +95,31 @@ const ModernBooksPage = () => {
         <meta property="og:url" content={metaTags.openGraph.url} />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTags.openGraph.title} />
+        <meta name="twitter:description" content={metaTags.openGraph.description} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://book-bounty-harvester.lovable.app/modern-books" />
+        
+        {/* Structured data for book list */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "itemListElement": books.map((book, index) => ({
+              "@type": "ListItem",
+              "position": index + 1,
+              "item": {
+                "@type": "Book",
+                "name": book.title,
+                "author": {
+                  "@type": "Person",
+                  "name": book.author.name
+                },
+                "url": `https://book-bounty-harvester.lovable.app/book/${book.id}`
+              }
+            }))
+          })}
+        </script>
       </Helmet>
       
       <Navbar />

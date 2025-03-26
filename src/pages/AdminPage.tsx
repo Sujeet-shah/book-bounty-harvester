@@ -12,6 +12,7 @@ const AdminPage = () => {
       <Helmet>
         <title>Admin Dashboard | Book Summary App</title>
         <meta name="robots" content="noindex, nofollow" />
+        <meta name="description" content="Admin dashboard for managing book summaries and user content." />
       </Helmet>
       
       <Navbar />

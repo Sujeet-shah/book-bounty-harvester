@@ -6,9 +6,20 @@ import { generatePageMetaTags, generateWebsiteStructuredData } from '@/lib/seo';
 
 const AboutPage = () => {
   const metaTags = generatePageMetaTags(
-    'About Us', 
-    'Learn more about the BookSummary App, our mission, and how we help readers discover the key insights from popular books.',
-    ['about us', 'book summaries', 'reading', 'book insights', 'literature']
+    'About Us | Book Summary App', 
+    'Learn more about the BookSummary App, our mission, and how we help readers discover the key insights from popular books and classics from Project Gutenberg.',
+    [
+      'about us', 
+      'book summaries', 
+      'reading', 
+      'book insights', 
+      'literature',
+      'project gutenberg',
+      'book reviews',
+      'reading assistance',
+      'free book summaries',
+      'classic literature'
+    ]
   );
 
   return (
@@ -23,10 +34,16 @@ const AboutPage = () => {
         <meta property="og:description" content={metaTags.openGraph.description} />
         <meta property="og:type" content={metaTags.openGraph.type} />
         <meta property="og:url" content={metaTags.openGraph.url} />
+        <meta property="og:image" content="/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTags.openGraph.title} />
+        <meta name="twitter:description" content={metaTags.openGraph.description} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://book-bounty-harvester.lovable.app/about" />
         
         {/* Structured Data */}
         <script type="application/ld+json">
-          {generateWebsiteStructuredData()}
+          {generateWebsiteStructuredData("https://book-bounty-harvester.lovable.app")}
         </script>
       </Helmet>
       

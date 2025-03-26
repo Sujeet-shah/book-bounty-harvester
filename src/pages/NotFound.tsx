@@ -19,7 +19,9 @@ const NotFound = () => {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Page Not Found | Book Summary App</title>
-        <meta name="description" content="The page you are looking for does not exist." />
+        <meta name="description" content="The page you are looking for does not exist. Return to our book summary homepage to discover popular and classic book summaries." />
+        <meta name="robots" content="noindex, follow" />
+        <link rel="canonical" href="https://book-bounty-harvester.lovable.app" />
       </Helmet>
       
       <Navbar />

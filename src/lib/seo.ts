@@ -11,7 +11,11 @@ export const generateBookMetaTags = (book: Book) => {
     book.author.name,
     ...book.genre,
     'book summary',
-    'book review'
+    'book review',
+    'book insights',
+    'book analysis',
+    'literature',
+    'reading'
   ].join(', ');
   
   return {
@@ -30,7 +34,7 @@ export const generateBookMetaTags = (book: Book) => {
 };
 
 // Generate canonical URL for a book
-export const getCanonicalUrl = (book: Book, baseUrl: string = 'https://booksummary.app') => {
+export const getCanonicalUrl = (book: Book, baseUrl: string = 'https://book-bounty-harvester.lovable.app') => {
   return `${baseUrl}/book/${book.id}/${encodeURIComponent(book.title.toLowerCase().replace(/\s+/g, '-'))}`;
 };
 
@@ -49,7 +53,7 @@ export const createSlug = (text: string): string => {
 };
 
 // Generate JSON-LD structured data for books (Schema.org)
-export const generateBookStructuredData = (book: Book, baseUrl: string = 'https://booksummary.app') => {
+export const generateBookStructuredData = (book: Book, baseUrl: string = 'https://book-bounty-harvester.lovable.app') => {
   const bookData = {
     '@context': 'https://schema.org',
     '@type': 'Book',
@@ -63,14 +67,22 @@ export const generateBookStructuredData = (book: Book, baseUrl: string = 'https:
     url: `${baseUrl}/book/${book.id}/${createSlug(book.title)}`,
     publisher: 'BookSummary App',
     genre: book.genre,
-    datePublished: book.yearPublished?.toString() || book.dateAdded
+    datePublished: book.yearPublished?.toString() || book.dateAdded,
+    review: {
+      '@type': 'Review',
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: book.rating,
+        bestRating: '5'
+      }
+    }
   };
 
   return JSON.stringify(bookData);
 };
 
 // Generate JSON-LD structured data for the website
-export const generateWebsiteStructuredData = (baseUrl: string = 'https://booksummary.app') => {
+export const generateWebsiteStructuredData = (baseUrl: string = 'https://book-bounty-harvester.lovable.app') => {
   const websiteData = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -81,7 +93,15 @@ export const generateWebsiteStructuredData = (baseUrl: string = 'https://booksum
       target: `${baseUrl}/search?q={search_term_string}`,
       'query-input': 'required name=search_term_string'
     },
-    description: 'Discover summaries of popular books across various genres. Get the key insights without reading the entire book.'
+    description: 'Discover summaries of popular books across various genres. Get the key insights without reading the entire book.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'BookSummary App',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/og-image.png`
+      }
+    }
   };
 
   return JSON.stringify(websiteData);
@@ -111,4 +131,43 @@ export const calculateReadingTime = (text: string): number => {
   const wordsPerMinute = 200;
   const numberOfWords = text.split(/\s/g).length;
   return Math.ceil(numberOfWords / wordsPerMinute);
+};
+
+// Generate breadcrumb structured data
+export const generateBreadcrumbStructuredData = (
+  items: Array<{name: string, url: string}>,
+  baseUrl: string = 'https://book-bounty-harvester.lovable.app'
+) => {
+  const breadcrumbData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': items.map((item, index) => ({
+      '@type': 'ListItem',
+      'position': index + 1,
+      'name': item.name,
+      'item': `${baseUrl}${item.url}`
+    }))
+  };
+
+  return JSON.stringify(breadcrumbData);
+};
+
+// Generate FAQ structured data
+export const generateFAQStructuredData = (
+  faqs: Array<{question: string, answer: string}>
+) => {
+  const faqData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': faqs.map(faq => ({
+      '@type': 'Question',
+      'name': faq.question,
+      'acceptedAnswer': {
+        '@type': 'Answer',
+        'text': faq.answer
+      }
+    }))
+  };
+
+  return JSON.stringify(faqData);
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -33,21 +32,32 @@ const Index = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // SEO meta tags
   const metaTags = generatePageMetaTags(
-    'Book Summary App', 
-    'Discover summaries of popular books across various genres. Get the key insights without reading the entire book.',
-    ['book summaries', 'book insights', 'reading', 'literature', 'non-fiction', 'self-help', 'business books']
+    'Book Summary App | Quick Book Insights and Summaries', 
+    'Discover summaries of popular books across various genres. Get the key insights without reading the entire book. Find classics and modern literature with our extensive collection.',
+    [
+      'book summaries', 
+      'book insights', 
+      'reading', 
+      'literature', 
+      'non-fiction', 
+      'self-help', 
+      'business books', 
+      'classic books',
+      'free book summaries',
+      'reading recommendations',
+      'best books',
+      'book reviews',
+      'book analysis'
+    ]
   );
-  
+
   useEffect(() => {
-    // Extract search term from URL query parameters
     const queryParams = new URLSearchParams(location.search);
     const searchQuery = queryParams.get('search') || '';
     setSearchTerm(searchQuery);
   }, [location.search]);
 
-  // Fetch books from Gutendex API
   const { 
     data: gutendexData, 
     isLoading, 
@@ -72,10 +82,9 @@ const Index = () => {
         });
       }
     },
-    enabled: true, // Always fetch on component mount
+    enabled: true
   });
-  
-  // Fetch modern books (popular downloads)
+
   const { 
     data: modernBooksData, 
     isLoading: isLoadingModern
@@ -92,8 +101,7 @@ const Index = () => {
       }
     }
   });
-  
-  // Set total pages after query success
+
   useEffect(() => {
     if (gutendexData) {
       const totalItems = gutendexData.count;
@@ -102,27 +110,22 @@ const Index = () => {
       setTotalPages(calculatedPages);
     }
   }, [gutendexData]);
-  
+
   useEffect(() => {
-    // Get books from localStorage if available, otherwise use default books
     const storedBooks = localStorage.getItem('bookSummaryBooks');
     const allBooks = storedBooks ? JSON.parse(storedBooks) : defaultBooks;
     
-    // Find a featured book
     const featured = allBooks.find((book: Book) => book.isFeatured);
     setFeaturedBook(featured || null);
     
-    // Find trending books (exclude featured)
     const trending = allBooks
       .filter((book: Book) => book.isTrending && (!featured || book.id !== featured.id))
       .slice(0, 4);
     setTrendingBooks(trending);
     
-    // Set local books in state
     setLocalBooks(allBooks);
   }, []);
 
-  // Convert Gutendex books to our Book format
   const convertGutendexBooks = (gutendexBooks: any[]) => {
     if (!gutendexBooks || !Array.isArray(gutendexBooks)) return [];
     
@@ -150,24 +153,22 @@ const Index = () => {
       };
     });
   };
-  
+
   const gutendexBooks = gutendexData ? convertGutendexBooks(gutendexData.results) : [];
   const modernBooks = modernBooksData ? convertGutendexBooks(modernBooksData.results) : [];
-  
-  // Combine local books with Gutendex books based on search
+
   const displayBooks = searchTerm ? gutendexBooks : [...localBooks, ...gutendexBooks];
-  
+
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    setPage(1); // Reset page when searching
-    // Update the URL with the search term
+    setPage(1);
     if (term) {
       navigate(`/?search=${encodeURIComponent(term)}`);
     } else {
       navigate('/');
     }
   };
-  
+
   const handleBookClick = (bookId: string) => {
     navigate(`/book/${bookId}`);
   };
@@ -181,7 +182,7 @@ const Index = () => {
     setPage(prev => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   };
-  
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -194,8 +195,15 @@ const Index = () => {
         <meta property="og:url" content={metaTags.openGraph.url} />
         <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTags.openGraph.title} />
+        <meta name="twitter:description" content={metaTags.openGraph.description} />
+        <meta name="twitter:image" content="/og-image.png" />
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+        <meta name="google" content="notranslate" />
+        <link rel="canonical" href="https://book-bounty-harvester.lovable.app/" />
         <script type="application/ld+json">
-          {generateWebsiteStructuredData()}
+          {generateWebsiteStructuredData("https://book-bounty-harvester.lovable.app")}
         </script>
       </Helmet>
       
@@ -203,7 +211,6 @@ const Index = () => {
       
       <main className="pt-24 px-4 pb-16">
         <div className="max-w-7xl mx-auto">
-          {/* Search */}
           <div className="mb-8 max-w-2xl mx-auto">
             <SearchBar onSearch={handleSearch} initialValue={searchTerm} />
           </div>
@@ -248,7 +255,6 @@ const Index = () => {
                     ))}
                   </div>
                   
-                  {/* Pagination controls */}
                   <div className="flex justify-center mt-12 space-x-2">
                     <button
                       onClick={handlePrevPage}
@@ -275,14 +281,12 @@ const Index = () => {
             </>
           ) : (
             <>
-              {/* Featured Book */}
               {featuredBook && (
                 <div className="mb-16">
                   <FeaturedBook book={featuredBook} />
                 </div>
               )}
               
-              {/* Modern Books */}
               <div className="mb-16">
                 <div className="flex items-center mb-6">
                   <Sparkles className="h-5 w-5 text-primary mr-2" />
@@ -303,7 +307,6 @@ const Index = () => {
                 )}
               </div>
               
-              {/* Trending Books */}
               {trendingBooks.length > 0 && (
                 <div className="mb-16">
                   <h2 className="text-2xl font-bold mb-6">Trending Now</h2>
@@ -315,7 +318,6 @@ const Index = () => {
                 </div>
               )}
               
-              {/* Project Gutenberg Books */}
               <div className="mb-16">
                 <h2 className="text-2xl font-bold mb-6">Discover Classic Books</h2>
                 {isLoading && !gutendexBooks.length ? (
@@ -343,7 +345,6 @@ const Index = () => {
                       ))}
                     </div>
                     
-                    {/* Pagination controls */}
                     <div className="flex justify-center mt-12 space-x-2">
                       <button
                         onClick={handlePrevPage}
@@ -369,7 +370,6 @@ const Index = () => {
                 )}
               </div>
               
-              {/* All Books */}
               <div>
                 <h2 className="text-2xl font-bold mb-6">Your Collection</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
