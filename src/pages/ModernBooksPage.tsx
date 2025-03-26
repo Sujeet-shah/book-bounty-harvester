@@ -23,6 +23,11 @@ const ModernBooksPage = () => {
     ['modern books', 'contemporary literature', 'book summaries', 'reading']
   );
   
+  // Function to keep the previous page data while loading
+  const keepPreviousPageData = (previousData: any) => {
+    return previousData;
+  };
+  
   // Use React Query for data fetching
   const { data, isLoading, error } = useQuery({
     queryKey: ['modernBooks', page],
@@ -30,11 +35,6 @@ const ModernBooksPage = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
     placeholderData: keepPreviousPageData
   });
-  
-  // Function to keep the previous page data while loading
-  const keepPreviousPageData = (previousData: any) => {
-    return previousData;
-  };
   
   // Handle error
   useEffect(() => {
