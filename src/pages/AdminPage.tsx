@@ -1,8 +1,8 @@
 
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import AdminPanel from '@/components/AdminPanel';
+import AdminHeader from '@/components/AdminHeader';
 import { ArrowLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
@@ -26,6 +26,9 @@ const AdminPage = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             <span>Back to Home</span>
           </Link>
+          
+          {/* Admin Header */}
+          <AdminHeader />
           
           {/* Admin Panel */}
           <AdminPanel />

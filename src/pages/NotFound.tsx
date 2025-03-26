@@ -3,6 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { BookOpen, Home } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { Helmet } from "react-helmet-async";
 
 const NotFound = () => {
   const location = useLocation();
@@ -16,7 +17,13 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Page Not Found | Book Summary App</title>
+        <meta name="description" content="The page you are looking for does not exist." />
+      </Helmet>
+      
       <Navbar />
+      
       <div className="pt-28 px-4 flex flex-col items-center justify-center text-center max-w-md mx-auto">
         <BookOpen className="h-20 w-20 text-primary/30 mb-6" />
         <h1 className="text-4xl font-bold mb-4">404</h1>
