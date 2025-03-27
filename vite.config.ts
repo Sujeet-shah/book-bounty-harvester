@@ -13,10 +13,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       jsxImportSource: 'react',
-      // Ensure proper JSX transformation for production
-      babel: {
-        plugins: []
-      }
+      // The SWC plugin doesn't use babel, so we remove that configuration
     }),
     mode === 'development' &&
     componentTagger(),
