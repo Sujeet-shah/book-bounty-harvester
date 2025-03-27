@@ -5,10 +5,13 @@ https://book-bounty-harvester-preview.lovable.app/* https://book-bounty-harveste
 # Redirect default Render URLs to primary domain
 https://book-bounty-harvester.onrender.com/* https://book-bounty-harvester.lovable.app/:splat 301!
 
-# Redirect pages with duplicate content
+# Redirect pages with duplicate content - make these permanent 301 redirects
 /modern-books-|-book-summary-app /modern-books 301!
 /about-us-|-book-summary-app /about 301!
 /book-summary-app-|-quick-book-insights-and-summaries / 301!
+
+# Force HTTPS for all connections
+http://book-bounty-harvester.lovable.app/* https://book-bounty-harvester.lovable.app/:splat 301!
 
 # Handle 404s with SPA routing
 /* /index.html 200

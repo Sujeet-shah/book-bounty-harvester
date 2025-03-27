@@ -9,9 +9,19 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    headers: {
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Content-Security-Policy": "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.gutendex.com;",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+    }
   },
   plugins: [
-    react(),
+    react({
+      jsxImportSource: "react",
+      plugins: [["@swc/plugin-transform-react-jsx", { development: mode === "development" }]]
+    }),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),

@@ -5,3 +5,8 @@ Allow: /
 
 # Sitemap location
 Sitemap: https://book-bounty-harvester.lovable.app/sitemap.xml
+
+# Prevent duplicate content issues
+Disallow: /modern-books-|-book-summary-app
+Disallow: /about-us-|-book-summary-app  
+Disallow: /book-summary-app-|-quick-book-insights-and-summaries
