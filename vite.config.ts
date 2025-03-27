@@ -11,10 +11,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react({
-      jsxImportSource: 'react',
-      // The SWC plugin doesn't use babel, so we remove that configuration
-    }),
+    react(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
