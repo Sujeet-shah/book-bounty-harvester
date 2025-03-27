@@ -1,8 +1,8 @@
 
 {
-  "name": "Book Summary App",
+  "name": "Book Summary App - Quick Book Insights and Reviews",
   "short_name": "BookSummary",
-  "description": "Concise summaries of popular books and classic literature",
+  "description": "Discover summaries and insights from popular books across various genres. Get key takeaways without reading the entire book.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -18,5 +18,8 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "categories": ["books", "education", "reading"],
+  "orientation": "portrait",
+  "lang": "en-US"
 }

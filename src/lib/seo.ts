@@ -4,12 +4,12 @@ import { Book } from './data';
 // Generate SEO-friendly meta tags from book data
 export const generateBookMetaTags = (book: Book) => {
   const title = `${book.title} by ${book.author.name} | BookSummary App`;
-  const description = book.shortSummary || book.summary.substring(0, 160);
+  const description = book.shortSummary || (book.summary && book.summary.substring(0, 160)) || `Read our summary of ${book.title} by ${book.author.name}`;
   
   const keywords = [
     book.title,
     book.author.name,
-    ...book.genre,
+    ...(book.genre || []),
     'book summary',
     'book review',
     'book insights',
@@ -25,8 +25,8 @@ export const generateBookMetaTags = (book: Book) => {
     openGraph: {
       title,
       description,
-      image: book.coverUrl,
-      url: `/book/${book.id}`,
+      image: book.coverUrl || '/og-image.png',
+      url: `/book/${book.id}/${createSlug(book.title)}`,
       type: 'book',
       author: book.author.name
     }
@@ -62,8 +62,8 @@ export const generateBookStructuredData = (book: Book, baseUrl: string = 'https:
       '@type': 'Person',
       name: book.author.name
     },
-    description: book.shortSummary || book.summary.substring(0, 160),
-    image: book.coverUrl,
+    description: book.shortSummary || (book.summary && book.summary.substring(0, 160)) || `Summary of ${book.title}`,
+    image: book.coverUrl || `${baseUrl}/og-image.png`,
     url: `${baseUrl}/book/${book.id}/${createSlug(book.title)}`,
     publisher: 'BookSummary App',
     genre: book.genre,
@@ -75,6 +75,11 @@ export const generateBookStructuredData = (book: Book, baseUrl: string = 'https:
         ratingValue: book.rating,
         bestRating: '5'
       }
+    },
+    inLanguage: "en",
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${baseUrl}/book/${book.id}/${createSlug(book.title)}`
     }
   };
 
@@ -101,7 +106,9 @@ export const generateWebsiteStructuredData = (baseUrl: string = 'https://book-bo
         '@type': 'ImageObject',
         url: `${baseUrl}/og-image.png`
       }
-    }
+    },
+    inLanguage: "en",
+    copyrightYear: new Date().getFullYear()
   };
 
   return JSON.stringify(websiteData);
@@ -111,7 +118,8 @@ export const generateWebsiteStructuredData = (baseUrl: string = 'https://book-bo
 export const generatePageMetaTags = (
   title: string, 
   description: string, 
-  keywords: string[] = []
+  keywords: string[] = [],
+  path: string = ''
 ) => {
   return {
     title: `${title} | BookSummary App`,
@@ -120,7 +128,7 @@ export const generatePageMetaTags = (
     openGraph: {
       title: `${title} | BookSummary App`,
       description,
-      url: `/${title.toLowerCase().replace(/\s+/g, '-')}`,
+      url: `/${path || title.toLowerCase().replace(/\s+/g, '-')}`,
       type: 'website'
     }
   };

@@ -1,24 +1,31 @@
 
 import React from 'react';
-import { generateWebsiteStructuredData } from '@/lib/seo';
+import { generateWebsiteStructuredData, generateBookStructuredData, generateFAQStructuredData } from '@/lib/seo';
 
 interface SEOStructuredDataProps {
   type?: 'website' | 'book' | 'faq';
   data?: any;
+  url?: string;
 }
 
-const SEOStructuredData: React.FC<SEOStructuredDataProps> = ({ type = 'website', data }) => {
+const SEOStructuredData: React.FC<SEOStructuredDataProps> = ({ 
+  type = 'website', 
+  data,
+  url = "https://book-bounty-harvester.lovable.app"
+}) => {
   // Generate the appropriate structured data based on the type
   const getStructuredData = () => {
     switch (type) {
       case 'website':
-        return generateWebsiteStructuredData("https://book-bounty-harvester.lovable.app");
+        return generateWebsiteStructuredData(url);
       case 'book':
-        return JSON.stringify(data);
+        if (!data) return generateWebsiteStructuredData(url);
+        return generateBookStructuredData(data, url);
       case 'faq':
-        return JSON.stringify(data);
+        if (!data) return generateWebsiteStructuredData(url);
+        return generateFAQStructuredData(data);
       default:
-        return generateWebsiteStructuredData("https://book-bounty-harvester.lovable.app");
+        return generateWebsiteStructuredData(url);
     }
   };
 
