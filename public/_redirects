@@ -1,2 +1,9 @@
 
+# Redirect domain aliases to primary domain
+https://book-bounty-harvester-preview.lovable.app/* https://book-bounty-harvester.lovable.app/:splat 301!
+
+# Redirect default Render URLs to primary domain
+https://book-bounty-harvester.onrender.com/* https://book-bounty-harvester.lovable.app/:splat 301!
+
+# Handle 404s with SPA routing
 /* /index.html 200

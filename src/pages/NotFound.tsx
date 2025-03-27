@@ -22,6 +22,10 @@ const NotFound = () => {
         <meta name="description" content="The page you are looking for does not exist. Return to our book summary homepage to discover popular and classic book summaries." />
         <meta name="robots" content="noindex, follow" />
         <link rel="canonical" href="https://book-bounty-harvester.lovable.app" />
+        <meta property="og:title" content="Page Not Found | Book Summary App" />
+        <meta property="og:description" content="The page you are looking for does not exist. Return to our book summary homepage." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://book-bounty-harvester.lovable.app/404" />
       </Helmet>
       
       <Navbar />

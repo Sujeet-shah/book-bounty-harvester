@@ -27,5 +27,32 @@ export default defineConfig(({ mode }) => ({
     sourcemap: true,
     // Make sure all paths are relative
     assetsInlineLimit: 0,
-  }
+    // Optimize CSS
+    cssCodeSplit: true,
+    // Better minification
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+      },
+    },
+    // Reduce chunk size for better loading
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-toast', '@radix-ui/react-dialog'],
+        },
+      },
+    },
+  },
+  // Optimize CSS
+  css: {
+    postcss: {
+      plugins: [
+        require('autoprefixer'),
+        require('cssnano')
+      ],
+    },
+  },
 }));

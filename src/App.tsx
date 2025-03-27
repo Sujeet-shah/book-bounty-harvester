@@ -1,9 +1,12 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
+import { Helmet } from 'react-helmet-async';
+import { generateWebsiteStructuredData } from '@/lib/seo';
+import { useEffect } from 'react';
 
 import './App.css';
 
@@ -24,6 +27,25 @@ import ModernBooksPage from './pages/ModernBooksPage';
 import UserGuard from './components/UserGuard';
 import AdminGuard from './components/AdminGuard';
 
+// Analytics tracking component
+const RouteChangeTracker = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Track page views - normally this would be where you put your analytics code
+    const page_path = location.pathname + location.search;
+    console.log(`Page view: ${page_path}`);
+    
+    // If you have a real analytics solution, you would call it here
+    // e.g., gtag('config', 'GA_MEASUREMENT_ID', { page_path });
+    
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  return null;
+};
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +61,17 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <Router>
+          {/* Global SEO elements */}
+          <Helmet>
+            <script type="application/ld+json">
+              {generateWebsiteStructuredData("https://book-bounty-harvester.lovable.app")}
+            </script>
+            <link rel="manifest" href="/manifest.json" />
+          </Helmet>
+          
+          {/* Analytics tracker */}
+          <RouteChangeTracker />
+          
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/book/:id" element={<BookPage />} />
