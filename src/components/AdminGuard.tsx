@@ -20,7 +20,22 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
     // Check if admin is logged in
     const checkAdminAuth = async () => {
       try {
-        // Check admin login status using auth service
+        // First check if user is authenticated at all
+        const isUserLoggedIn = authService.isAuthenticated();
+        
+        if (!isUserLoggedIn) {
+          toast({
+            title: 'Login required',
+            description: 'Please login to access this page',
+            variant: 'destructive',
+          });
+          // Save the attempted URL for redirect after login
+          sessionStorage.setItem('redirectAfterLogin', location.pathname);
+          navigate('/login');
+          return;
+        }
+        
+        // Then check if authenticated user is an admin
         const isAdmin = authService.isAdmin();
         
         if (!isAdmin) {
@@ -29,9 +44,7 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
             description: 'Administrator privileges required',
             variant: 'destructive',
           });
-          // Save the attempted URL for redirect after login
-          sessionStorage.setItem('redirectAfterLogin', location.pathname);
-          navigate('/login');
+          navigate('/');
           return;
         }
         

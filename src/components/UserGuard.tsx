@@ -30,7 +30,7 @@ const UserGuard = ({ children }: UserGuardProps) => {
           });
           // Save the current location for redirect after login
           sessionStorage.setItem('redirectAfterLogin', location.pathname);
-          navigate('/login', { state: { redirectTo: location.pathname } });
+          navigate('/login');
           return;
         }
         
@@ -42,7 +42,7 @@ const UserGuard = ({ children }: UserGuardProps) => {
           description: 'Please try logging in again',
           variant: 'destructive',
         });
-        navigate('/login', { state: { redirectTo: location.pathname } });
+        navigate('/login');
       } finally {
         setIsLoading(false);
       }
