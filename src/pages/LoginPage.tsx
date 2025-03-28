@@ -62,9 +62,13 @@ const LoginPage = () => {
       sessionStorage.removeItem('redirectAfterLogin');
       
       // Redirect based on user role
-      if (user.role === 'admin' && redirectTo === '/admin') {
-        navigate('/admin');
-      } else if (redirectTo !== '/login' && redirectTo !== '/register') {
+      if (user.role === 'admin') {
+        if (redirectTo.includes('/admin')) {
+          navigate(redirectTo);
+        } else {
+          navigate('/admin');
+        }
+      } else if (redirectTo !== '/login' && redirectTo !== '/register' && !redirectTo.includes('/admin')) {
         navigate(redirectTo);
       } else {
         navigate('/');

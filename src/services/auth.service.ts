@@ -1,4 +1,3 @@
-
 /**
  * Authentication Service
  * 
@@ -88,6 +87,13 @@ class AuthService {
         // Set user logged in state
         localStorage.setItem('userLoggedIn', 'true');
         localStorage.setItem('currentUser', JSON.stringify(authenticatedUser));
+        
+        // Only set adminLoggedIn if user is an admin
+        if (authenticatedUser.role === 'admin') {
+          localStorage.setItem('adminLoggedIn', 'true');
+        } else {
+          localStorage.removeItem('adminLoggedIn');
+        }
         
         return authenticatedUser;
       } else {
@@ -181,9 +187,8 @@ class AuthService {
    * In production: This would validate admin role with your backend
    */
   isAdmin(): boolean {
-    const isAdmin = localStorage.getItem('adminLoggedIn') === 'true';
     const user = this.getCurrentUser();
-    return isAdmin && !!user && user.role === 'admin';
+    return !!user && user.role === 'admin' && localStorage.getItem('adminLoggedIn') === 'true';
   }
   
   /**

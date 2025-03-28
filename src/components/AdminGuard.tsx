@@ -20,31 +20,6 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
     // Check if admin is logged in
     const checkAdminAuth = async () => {
       try {
-        // For development purposes, set admin login to true if it doesn't exist
-        if (localStorage.getItem('adminLoggedIn') === null) {
-          console.log('Setting admin login for development');
-          localStorage.setItem('adminLoggedIn', 'true');
-          
-          // Also create a mock admin user if none exists
-          if (localStorage.getItem('currentUser') === null) {
-            const mockAdminUser = {
-              id: 'admin-1',
-              name: 'Admin User',
-              email: 'admin@example.com',
-              role: 'admin'
-            };
-            localStorage.setItem('currentUser', JSON.stringify(mockAdminUser));
-          } else {
-            // Ensure existing user has admin role
-            const userJson = localStorage.getItem('currentUser');
-            const user = userJson ? JSON.parse(userJson) : null;
-            if (user && user.role !== 'admin') {
-              user.role = 'admin';
-              localStorage.setItem('currentUser', JSON.stringify(user));
-            }
-          }
-        }
-        
         // Check admin login status using auth service
         const isAdmin = authService.isAdmin();
         

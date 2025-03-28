@@ -31,8 +31,20 @@ const Navbar = () => {
   
   useEffect(() => {
     // Check login status and admin status
-    setIsLoggedIn(authService.isAuthenticated());
-    setIsAdmin(authService.isAdmin());
+    const checkAuth = () => {
+      setIsLoggedIn(authService.isAuthenticated());
+      setIsAdmin(authService.isAdmin());
+    };
+    
+    checkAuth();
+    
+    // Listen for storage events (like logout from another tab)
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [location.pathname]); // Re-check on route changes
   
   const navLinks = [
