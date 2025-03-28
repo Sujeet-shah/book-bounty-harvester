@@ -1,14 +1,16 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Search, User, LogIn, Book, Clock, Sparkles } from 'lucide-react';
+import { Menu, X, Search, User, LogIn, Book, Clock, Sparkles, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { authService } from '@/services/auth.service';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,10 +30,10 @@ const Navbar = () => {
   }, [location.pathname]);
   
   useEffect(() => {
-    const userLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
-    const adminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
-    setIsLoggedIn(userLoggedIn || adminLoggedIn);
-  }, []);
+    // Check login status and admin status
+    setIsLoggedIn(authService.isAuthenticated());
+    setIsAdmin(authService.isAdmin());
+  }, [location.pathname]); // Re-check on route changes
   
   const navLinks = [
     { label: 'Home', path: '/', icon: <Book className="h-4 w-4 mr-2" /> },
@@ -46,11 +48,11 @@ const Navbar = () => {
   };
   
   const handleLogout = () => {
-    localStorage.removeItem('userLoggedIn');
-    localStorage.removeItem('adminLoggedIn');
-    localStorage.removeItem('currentUser');
-    setIsLoggedIn(false);
-    navigate('/login');
+    authService.logout().then(() => {
+      setIsLoggedIn(false);
+      setIsAdmin(false);
+      navigate('/login');
+    });
   };
   
   return (
@@ -79,6 +81,16 @@ const Navbar = () => {
                 <span>{link.label}</span>
               </Link>
             ))}
+            
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                <span>Admin</span>
+              </Link>
+            )}
           </nav>
         )}
         
@@ -134,6 +146,16 @@ const Navbar = () => {
                 <span>{link.label}</span>
               </Link>
             ))}
+            
+            {isAdmin && (
+              <Link 
+                to="/admin" 
+                className="flex items-center text-lg text-primary hover:text-primary/80 transition-colors"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                <span>Admin Dashboard</span>
+              </Link>
+            )}
             
             {isLoggedIn ? (
               <>

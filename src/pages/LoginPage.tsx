@@ -1,44 +1,43 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LockKeyhole, Mail, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import Navbar from '@/components/Navbar';
-import { Helmet } from 'react-helmet-async';
 import { authService } from '@/services/auth.service';
+import Navbar from '@/components/Navbar';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Helmet } from 'react-helmet-async';
 
 const formSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 const LoginPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Check if we have a redirectTo in the location state
-  const redirectTo = location.state?.redirectTo || '/';
+  // Get redirect location from state or session storage
+  const redirectTo = location.state?.redirectTo || 
+                     sessionStorage.getItem('redirectAfterLogin') || 
+                     '/';
   
-  // Check if user is already logged in
-  useEffect(() => {
-    if (authService.isAuthenticated()) {
-      if (authService.isAdmin()) {
-        navigate('/admin');
-      } else {
-        navigate(redirectTo);
-      }
-    }
-  }, [navigate, redirectTo]);
-  
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
@@ -46,123 +45,106 @@ const LoginPage = () => {
     },
   });
   
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
-    
     try {
       const user = await authService.login({
         email: values.email,
-        password: values.password
+        password: values.password,
       });
       
       toast({
         title: 'Login successful',
-        description: user.role === 'admin' 
-          ? 'Welcome to the admin dashboard' 
-          : `Welcome back, ${user.name}!`,
+        description: `Welcome back, ${user.name}!`,
       });
       
-      if (user.role === 'admin') {
+      // Clear the redirect URL from session storage
+      sessionStorage.removeItem('redirectAfterLogin');
+      
+      // Redirect based on user role
+      if (user.role === 'admin' && redirectTo === '/admin') {
         navigate('/admin');
-      } else {
+      } else if (redirectTo !== '/login' && redirectTo !== '/register') {
         navigate(redirectTo);
+      } else {
+        navigate('/');
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Login error:', error);
       toast({
         title: 'Login failed',
-        description: error.message || 'Invalid email or password',
+        description: error instanceof Error ? error.message : 'Please check your credentials and try again',
         variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Login | Book Summary App</title>
-        <meta name="description" content="Sign in to your account to access your saved books, comments, and preferences." />
-        <meta name="robots" content="index, follow" />
+        <meta name="description" content="Log in to access your saved books, summaries, and personalized recommendations." />
       </Helmet>
       
       <Navbar />
       
-      <main className="pt-28 px-4 pb-16">
-        <div className="max-w-md mx-auto glass-panel p-8 shadow-elegant animate-fade-in">
-          <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          placeholder="you@example.com" 
-                          className="pl-10"
-                          {...field} 
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••" 
-                          className="pl-10"
-                          {...field} 
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Signing in...' : 'Sign In'}
-                {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
-              </Button>
-            </form>
-          </Form>
-          
-          <div className="mt-6 text-sm text-center text-muted-foreground">
-            <p>Demo credentials:</p>
-            <div className="font-mono bg-muted p-2 rounded mt-1 space-y-1 text-xs">
-              <p><strong>Admin:</strong> admin@example.com / admin123</p>
-              <p><strong>User:</strong> Create an account to test user features</p>
-            </div>
+      <main className="pt-28 pb-16 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="mb-8 text-center">
+            <h1 className="text-2xl font-bold mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground">Enter your credentials to access your account</p>
           </div>
           
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
+          <div className="bg-card rounded-lg border shadow-sm p-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="you@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="******" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Logging in...' : 'Login'}
+                </Button>
+              </form>
+            </Form>
+            
+            <div className="mt-6 text-center text-sm">
+              <p className="text-muted-foreground">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-primary hover:underline">
+                  Register
+                </Link>
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                Admin demo: admin@example.com / admin123
+              </p>
+            </div>
           </div>
         </div>
       </main>

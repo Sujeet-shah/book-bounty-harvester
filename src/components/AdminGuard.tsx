@@ -1,8 +1,9 @@
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { authService } from '@/services/auth.service';
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -10,6 +11,7 @@ interface AdminGuardProps {
 
 const AdminGuard = ({ children }: AdminGuardProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,30 +45,18 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
           }
         }
         
-        // Check admin login status
-        const isAdminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+        // Check admin login status using auth service
+        const isAdmin = authService.isAdmin();
         
-        if (!isAdminLoggedIn) {
+        if (!isAdmin) {
           toast({
             title: 'Access denied',
             description: 'Administrator privileges required',
             variant: 'destructive',
           });
+          // Save the attempted URL for redirect after login
+          sessionStorage.setItem('redirectAfterLogin', location.pathname);
           navigate('/login');
-          return;
-        }
-        
-        // Verify admin role
-        const userJson = localStorage.getItem('currentUser');
-        const user = userJson ? JSON.parse(userJson) : null;
-        
-        if (!user || user.role !== 'admin') {
-          toast({
-            title: 'Access denied',
-            description: 'Administrator privileges required',
-            variant: 'destructive',
-          });
-          navigate('/');
           return;
         }
         
@@ -85,7 +75,7 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
     };
     
     checkAdminAuth();
-  }, [navigate, toast]);
+  }, [navigate, location.pathname, toast]);
   
   if (isLoading) {
     return (
