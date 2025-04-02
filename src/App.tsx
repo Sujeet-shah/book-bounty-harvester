@@ -84,7 +84,16 @@ function App() {
             
             {/* Protected Routes */}
             <Route path="/profile" element={<UserGuard><ProfilePage /></UserGuard>} />
-            <Route path="/admin" element={<AdminGuard><AdminPage /></AdminGuard>} />
+            
+            {/* Admin Route - Strictly protected */}
+            <Route 
+              path="/admin" 
+              element={
+                <AdminGuard>
+                  <AdminPage />
+                </AdminGuard>
+              } 
+            />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />

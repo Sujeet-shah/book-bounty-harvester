@@ -24,7 +24,7 @@ const UserGuard = ({ children }: UserGuardProps) => {
         
         if (!isUserLoggedIn) {
           toast({
-            title: 'Login required',
+            title: 'Access denied',
             description: 'Please login to access this feature',
             variant: 'destructive',
           });
