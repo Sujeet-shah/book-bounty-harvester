@@ -21,8 +21,11 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
     // Check if admin is logged in
     const checkAdminAuth = async () => {
       try {
+        console.log("Checking admin authentication...");
+        
         // First check if user is authenticated at all
         const isUserLoggedIn = authService.isAuthenticated();
+        console.log("User logged in:", isUserLoggedIn);
         
         if (!isUserLoggedIn) {
           toast({
@@ -38,6 +41,7 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
         
         // Then check if authenticated user is an admin
         const hasAdminRole = authService.isAdmin();
+        console.log("User has admin role:", hasAdminRole);
         
         if (!hasAdminRole) {
           toast({

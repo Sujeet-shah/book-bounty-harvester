@@ -187,8 +187,13 @@ class AuthService {
    * In production: This would validate admin role with your backend
    */
   isAdmin(): boolean {
+    // Double check both the user role and admin flag
     const user = this.getCurrentUser();
-    return !!user && user.role === 'admin' && localStorage.getItem('adminLoggedIn') === 'true';
+    const hasAdminRole = !!user && user.role === 'admin';
+    const hasAdminFlag = localStorage.getItem('adminLoggedIn') === 'true';
+    
+    // Both conditions must be true for admin access
+    return hasAdminRole && hasAdminFlag;
   }
   
   /**
