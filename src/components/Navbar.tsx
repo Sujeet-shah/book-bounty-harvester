@@ -1,11 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Search, User, LogIn, Book, Clock, Sparkles, Shield, BookOpen } from 'lucide-react';
+import { Menu, X, Search, User, LogIn, Clock, Sparkles, Shield, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { authService } from '@/services/auth.service';
+import Logo from './Logo';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,12 +49,12 @@ const Navbar = () => {
   }, [location.pathname]); // Re-check on route changes
   
   const navLinks = [
-    { label: 'Home', path: '/', icon: <Book className="h-4 w-4 mr-2" /> },
+    { label: 'Home', path: '/', icon: <BookOpen className="h-4 w-4 mr-2" /> },
     { label: 'Modern Books', path: '/modern-books', icon: <Sparkles className="h-4 w-4 mr-2" /> },
     { label: 'Trending', path: '/trending', icon: <Clock className="h-4 w-4 mr-2" /> },
     { label: 'Categories', path: '/categories', icon: <Search className="h-4 w-4 mr-2" /> },
     { label: 'Generate Summary', path: '/generate-summary', icon: <BookOpen className="h-4 w-4 mr-2" /> },
-    { label: 'About', path: '/about', icon: <Book className="h-4 w-4 mr-2" /> },
+    { label: 'About', path: '/about', icon: <BookOpen className="h-4 w-4 mr-2" /> },
   ];
   
   const toggleMenu = () => {
@@ -71,12 +72,10 @@ const Navbar = () => {
   return (
     <header className={cn(
       "fixed top-0 left-0 w-full z-50 transition-colors",
-      isScrolled ? "bg-background/90 backdrop-blur-sm" : "bg-transparent",
+      isScrolled ? "bg-background/90 backdrop-blur-sm shadow-subtle" : "bg-transparent",
     )}>
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center font-semibold text-xl">
-          BookSummary
-        </Link>
+        <Logo variant={isMobile ? 'compact' : 'default'} />
         
         {isMobile ? (
           <button onClick={toggleMenu} className="text-gray-500">
@@ -143,7 +142,8 @@ const Navbar = () => {
           "fixed top-0 left-0 h-screen w-3/4 bg-background p-4 z-40 shadow-lg transform transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between items-center mb-6">
+            <Logo />
             <button onClick={toggleMenu} className="text-gray-500">
               <X className="h-6 w-6" />
             </button>
