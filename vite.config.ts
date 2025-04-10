@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -35,13 +34,8 @@ export default defineConfig(({ mode }) => ({
     assetsInlineLimit: 0,
     // Optimize CSS
     cssCodeSplit: true,
-    // Better minification
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-      },
-    },
+    // Better minification, but using esbuild instead of terser
+    minify: 'esbuild',
     // Reduce chunk size for better loading
     rollupOptions: {
       output: {
