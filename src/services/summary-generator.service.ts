@@ -8,6 +8,7 @@
 interface SummaryGenerationData {
   title: string;
   author?: string;
+  genres?: string[];
   content?: string;
 }
 
@@ -48,8 +49,13 @@ class SummaryGeneratorService {
     try {
       // Prepare the prompt for Gemini
       let prompt = `Generate a comprehensive summary for the book "${data.title}"`;
-      if (data.author) {
+      
+      if (data.author && data.author.trim()) {
         prompt += ` by ${data.author}`;
+      }
+      
+      if (data.genres && data.genres.length > 0) {
+        prompt += `. The book belongs to the following genres: ${data.genres.join(', ')}.`;
       }
       
       if (data.content && data.content.trim()) {

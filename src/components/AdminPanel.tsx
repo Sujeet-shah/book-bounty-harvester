@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Book, books as defaultBooks } from '@/lib/data';
-import { Search, Edit, Trash2, Plus, Book as BookIcon, Users, BarChart3, Download, ChevronDown, Star, BookOpen, Loader2, AlertCircle } from 'lucide-react';
+import { Search, Edit, Trash2, Plus, Book as BookIcon, Users, BarChart3, Download, ChevronDown, Star, BookOpen, Loader2, AlertCircle, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BookForm from './BookFormAudio';
 import GutendexBookSearch from './GutendexBookSearch';
@@ -12,6 +12,8 @@ import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { SummaryGeneratorService } from '@/services/summary-generator.service';
+import { Badge } from './ui/badge';
+import { PREDEFINED_CATEGORIES } from './CategoryManager';
 
 const AdminPanel = () => {
   const [books, setBooks] = useState<Book[]>([]);
@@ -26,6 +28,7 @@ const AdminPanel = () => {
   const [summaryApiKey, setSummaryApiKey] = useState('');
   const [summaryBookTitle, setSummaryBookTitle] = useState('');
   const [summaryAuthorName, setSummaryAuthorName] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [generatedSummary, setGeneratedSummary] = useState('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [showApiKeyInput, setShowApiKeyInput] = useState(true);
@@ -90,6 +93,14 @@ const AdminPanel = () => {
     }
   };
 
+  const toggleGenre = (genre: string) => {
+    if (selectedGenres.includes(genre)) {
+      setSelectedGenres(selectedGenres.filter(g => g !== genre));
+    } else {
+      setSelectedGenres([...selectedGenres, genre]);
+    }
+  };
+
   const handleGenerateSummary = async () => {
     if (!summaryBookTitle.trim()) {
       toast({
@@ -106,6 +117,7 @@ const AdminPanel = () => {
       const data = {
         title: summaryBookTitle,
         author: summaryAuthorName,
+        genres: selectedGenres.length > 0 ? selectedGenres : undefined,
       };
       
       const result = await SummaryGeneratorService.generateSummary(data);
@@ -131,6 +143,10 @@ const AdminPanel = () => {
     setSummaryApiKey('');
     sessionStorage.removeItem('ai_api_key');
     setShowApiKeyInput(true);
+  };
+
+  const handleFilterChange = (source: 'all' | 'local' | 'gutenberg' | 'modern') => {
+    setShowSource(source);
   };
 
   const filteredBooks = allBooks.filter(book => {
@@ -193,10 +209,6 @@ const AdminPanel = () => {
       title: "Book imported",
       description: "The book has been added to your collection.",
     });
-  };
-
-  const handleFilterChange = (source: 'all' | 'local' | 'gutenberg' | 'modern') => {
-    setShowSource(source);
   };
 
   return (
@@ -520,7 +532,7 @@ const AdminPanel = () => {
               </div>
               
               <div>
-                <Label htmlFor="authorName">Author Name (Optional)</Label>
+                <Label htmlFor="authorName">Author Name</Label>
                 <Input 
                   id="authorName"
                   value={summaryAuthorName}
@@ -528,6 +540,28 @@ const AdminPanel = () => {
                   placeholder="Enter author name"
                   disabled={showApiKeyInput}
                 />
+              </div>
+              
+              <div>
+                <Label className="mb-2 block">Book Genres</Label>
+                <div className="flex flex-wrap gap-2 bg-background border rounded-md p-3">
+                  {PREDEFINED_CATEGORIES.map(genre => (
+                    <Badge 
+                      key={genre}
+                      variant={selectedGenres.includes(genre) ? "default" : "outline"}
+                      className={cn(
+                        "cursor-pointer hover:bg-muted-foreground/10",
+                        selectedGenres.includes(genre) ? "bg-primary" : ""
+                      )}
+                      onClick={() => toggleGenre(genre)}
+                    >
+                      {genre}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Click to select/deselect genres
+                </p>
               </div>
               
               <Button 
