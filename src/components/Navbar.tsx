@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Search, User, LogIn, Book, Clock, Sparkles, Shield } from 'lucide-react';
+import { Menu, X, Search, User, LogIn, Book, Clock, Sparkles, Shield, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -52,6 +52,7 @@ const Navbar = () => {
     { label: 'Modern Books', path: '/modern-books', icon: <Sparkles className="h-4 w-4 mr-2" /> },
     { label: 'Trending', path: '/trending', icon: <Clock className="h-4 w-4 mr-2" /> },
     { label: 'Categories', path: '/categories', icon: <Search className="h-4 w-4 mr-2" /> },
+    { label: 'Generate Summary', path: '/generate-summary', icon: <BookOpen className="h-4 w-4 mr-2" /> },
     { label: 'About', path: '/about', icon: <Book className="h-4 w-4 mr-2" /> },
   ];
   

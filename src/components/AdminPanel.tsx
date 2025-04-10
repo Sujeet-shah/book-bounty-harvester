@@ -1,34 +1,42 @@
-
 import { useState, useEffect } from 'react';
 import { Book, books as defaultBooks } from '@/lib/data';
-import { Search, Edit, Trash2, Plus, Book as BookIcon, Users, BarChart3, Download, ChevronDown, Star } from 'lucide-react';
+import { Search, Edit, Trash2, Plus, Book as BookIcon, Users, BarChart3, Download, ChevronDown, Star, BookOpen, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BookForm from './BookFormAudio';
 import GutendexBookSearch from './GutendexBookSearch';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { fetchModernBooks, convertToAppBook } from '@/lib/modernBooksApi';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Button } from './ui/button';
+import { Label } from './ui/label';
+import { SummaryGeneratorService } from '@/services/summary-generator.service';
 
 const AdminPanel = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'books' | 'users' | 'analytics'>('books');
+  const [activeTab, setActiveTab] = useState<'books' | 'users' | 'analytics' | 'summaries'>('books');
   const [showSource, setShowSource] = useState<'all' | 'local' | 'gutenberg' | 'modern'>('all');
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
+  const [summaryApiKey, setSummaryApiKey] = useState('');
+  const [summaryBookTitle, setSummaryBookTitle] = useState('');
+  const [summaryAuthorName, setSummaryAuthorName] = useState('');
+  const [generatedSummary, setGeneratedSummary] = useState('');
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(true);
   const { toast } = useToast();
 
-  // Fetch modern books for admin
   const { data: modernBooksData } = useQuery({
     queryKey: ['adminModernBooks'],
-    queryFn: () => fetchModernBooks(1, 50), // Fetch first 50 modern books for admin
-    staleTime: 10 * 60 * 1000 // 10 minutes
+    queryFn: () => fetchModernBooks(1, 50),
+    staleTime: 10 * 60 * 1000
   });
 
-  // Load local books
   useEffect(() => {
     const storedBooks = localStorage.getItem('bookSummaryBooks');
     if (storedBooks) {
@@ -39,11 +47,9 @@ const AdminPanel = () => {
     }
   }, []);
 
-  // Combine all book sources
   useEffect(() => {
     let combined = [...books];
     
-    // Add modern books
     if (modernBooksData?.books) {
       const modernBooks = modernBooksData.books.map(book => convertToAppBook(book));
       combined = [...combined, ...modernBooks];
@@ -52,19 +58,85 @@ const AdminPanel = () => {
     setAllBooks(combined);
   }, [books, modernBooksData]);
 
-  // Save books to localStorage when they change
   useEffect(() => {
     if (books.length > 0) {
       localStorage.setItem('bookSummaryBooks', JSON.stringify(books));
     }
   }, [books]);
 
+  useEffect(() => {
+    const savedApiKey = sessionStorage.getItem('ai_api_key');
+    if (savedApiKey) {
+      setSummaryApiKey(savedApiKey);
+      SummaryGeneratorService.setApiKey(savedApiKey);
+      setShowApiKeyInput(false);
+    }
+  }, []);
+
+  const handleSaveApiKey = () => {
+    if (summaryApiKey.trim()) {
+      SummaryGeneratorService.setApiKey(summaryApiKey.trim());
+      setShowApiKeyInput(false);
+      toast({
+        title: "API Key saved",
+        description: "Your API key has been saved for this session",
+      });
+    } else {
+      toast({
+        title: "API Key required",
+        description: "Please enter a valid API key",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!summaryBookTitle.trim()) {
+      toast({
+        title: "Book title required",
+        description: "Please enter a book title to generate a summary",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsGeneratingSummary(true);
+      
+      const data = {
+        title: summaryBookTitle,
+        author: summaryAuthorName,
+      };
+      
+      const result = await SummaryGeneratorService.generateSummary(data);
+      setGeneratedSummary(result);
+      
+      toast({
+        title: "Summary generated",
+        description: "Book summary has been generated successfully",
+      });
+    } catch (error) {
+      console.error('Summary generation failed:', error);
+      toast({
+        title: "Summary generation failed",
+        description: "There was an error generating the summary. Please check your API key.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
+  const handleResetApiKey = () => {
+    setSummaryApiKey('');
+    sessionStorage.removeItem('ai_api_key');
+    setShowApiKeyInput(true);
+  };
+
   const filteredBooks = allBooks.filter(book => {
-    // Filter by search term
     const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          book.author.name.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Filter by source
     let matchesSource = true;
     if (showSource === 'local') {
       matchesSource = !book.id.startsWith('gutenberg-') && !book.id.startsWith('modern-');
@@ -85,7 +157,6 @@ const AdminPanel = () => {
   };
 
   const handleDelete = (id: string) => {
-    // Only delete books from local storage
     if (!id.startsWith('gutenberg-') && !id.startsWith('modern-')) {
       setBooks(books.filter(book => book.id !== id));
       toast({
@@ -184,6 +255,12 @@ const AdminPanel = () => {
           icon={<BarChart3 className="h-4 w-4 mr-2" />}
           label="Analytics"
         />
+        <AdminTab
+          isActive={activeTab === 'summaries'}
+          onClick={() => setActiveTab('summaries')}
+          icon={<BookOpen className="h-4 w-4 mr-2" />}
+          label="Generate Summaries"
+        />
       </div>
       
       {activeTab === 'books' && (
@@ -216,15 +293,12 @@ const AdminPanel = () => {
                     description: "The new book has been added to your collection.",
                   });
                 } else {
-                  // Handle editing of different book types
                   if (book.id.startsWith('modern-') || book.id.startsWith('gutenberg-')) {
-                    // For external books, just show a message
                     toast({
                       title: "Book updated",
                       description: "External book details have been temporarily updated.",
                     });
                   } else {
-                    // For local books, update in storage
                     setBooks(books.map(b => b.id === book.id ? book : b));
                     toast({
                       title: "Book updated",
@@ -377,6 +451,131 @@ const AdminPanel = () => {
           <button className="btn-secondary">
             Get Notified When Ready
           </button>
+        </div>
+      )}
+      
+      {activeTab === 'summaries' && (
+        <div className="space-y-6">
+          <div className="glass-panel p-6 rounded-lg shadow-sm">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <BookOpen className="h-5 w-5 mr-2 text-primary" />
+              AI Summary Generator
+            </h2>
+            
+            {showApiKeyInput ? (
+              <div className="space-y-4 mb-6">
+                <div className="bg-muted/30 p-4 rounded-md flex items-start">
+                  <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">API Key Required</p>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your Gemini API key to use the AI summary generator. 
+                      The key will be stored in your browser for this session only.
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="apiKey">Gemini API Key</Label>
+                  <div className="flex mt-1">
+                    <Input 
+                      id="apiKey"
+                      type="password"
+                      value={summaryApiKey}
+                      onChange={(e) => setSummaryApiKey(e.target.value)}
+                      placeholder="Enter your Gemini API key"
+                      className="flex-1"
+                    />
+                    <Button 
+                      className="ml-2"
+                      onClick={handleSaveApiKey}
+                    >
+                      Save Key
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Get an API key from <a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center mb-4 bg-muted/30 p-3 rounded-md">
+                <p className="text-sm">API Key: ••••••••••••••••</p>
+                <Button variant="outline" size="sm" onClick={handleResetApiKey}>
+                  Reset Key
+                </Button>
+              </div>
+            )}
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="bookTitle">Book Title</Label>
+                <Input 
+                  id="bookTitle"
+                  value={summaryBookTitle}
+                  onChange={(e) => setSummaryBookTitle(e.target.value)}
+                  placeholder="Enter book title"
+                  disabled={showApiKeyInput}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="authorName">Author Name (Optional)</Label>
+                <Input 
+                  id="authorName"
+                  value={summaryAuthorName}
+                  onChange={(e) => setSummaryAuthorName(e.target.value)}
+                  placeholder="Enter author name"
+                  disabled={showApiKeyInput}
+                />
+              </div>
+              
+              <Button 
+                className="w-full" 
+                onClick={handleGenerateSummary}
+                disabled={showApiKeyInput || isGeneratingSummary}
+              >
+                {isGeneratingSummary ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Summary...
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Generate Summary
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          {generatedSummary && (
+            <div className="glass-panel p-6 rounded-lg shadow-sm">
+              <h3 className="font-bold mb-2">Generated Summary:</h3>
+              
+              <Textarea
+                value={generatedSummary}
+                readOnly
+                className="min-h-[200px] mb-4"
+              />
+              
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigator.clipboard.writeText(generatedSummary)}
+                >
+                  Copy to Clipboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setGeneratedSummary('')}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
