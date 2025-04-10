@@ -6,7 +6,7 @@ import { Plus, X, Tag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Predefined book categories
-const PREDEFINED_CATEGORIES = [
+export const PREDEFINED_CATEGORIES = [
   'Fiction', 'Non-Fiction', 'Science Fiction', 'Fantasy', 'Mystery', 
   'Thriller', 'Romance', 'Historical Fiction', 'Biography', 'Self-Help', 
   'Business', 'Philosophy', 'Science', 'Technology', 'Art', 'Poetry',
