@@ -101,6 +101,33 @@ class SummaryGeneratorService {
       throw error;
     }
   }
+
+  /**
+   * Generate summaries for multiple books in batch
+   */
+  static async generateBatchSummaries(books: any[]): Promise<Record<string, string>> {
+    const results: Record<string, string> = {};
+    
+    for (const book of books) {
+      try {
+        const summary = await this.generateSummary({
+          title: book.title,
+          author: book.author.name,
+          genres: book.genre
+        });
+        
+        results[book.id] = summary;
+      } catch (error) {
+        console.error(`Failed to generate summary for book ${book.id}:`, error);
+        results[book.id] = "Summary generation failed.";
+      }
+      
+      // Small delay to avoid hitting rate limits
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    return results;
+  }
 }
 
 export { SummaryGeneratorService };

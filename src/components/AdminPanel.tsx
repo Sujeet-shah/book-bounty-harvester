@@ -31,6 +31,8 @@ const AdminPanel = () => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [generatedSummary, setGeneratedSummary] = useState('');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [isGeneratingAllSummaries, setIsGeneratingAllSummaries] = useState(false);
+  const [batchSummaryProgress, setBatchSummaryProgress] = useState({ current: 0, total: 0 });
   const [showApiKeyInput, setShowApiKeyInput] = useState(true);
   const { toast } = useToast();
 
@@ -136,6 +138,80 @@ const AdminPanel = () => {
       });
     } finally {
       setIsGeneratingSummary(false);
+    }
+  };
+
+  const handleGenerateAllSummaries = async () => {
+    if (!SummaryGeneratorService.getApiKey()) {
+      toast({
+        title: "API Key required", 
+        description: "Please enter your API key first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsGeneratingAllSummaries(true);
+      
+      const localBooksToUpdate = books.filter(book => 
+        !book.id.startsWith('gutenberg-') && !book.id.startsWith('modern-')
+      );
+      
+      if (localBooksToUpdate.length === 0) {
+        toast({
+          title: "No books to update",
+          description: "You don't have any local books to generate summaries for",
+          variant: "destructive" 
+        });
+        setIsGeneratingAllSummaries(false);
+        return;
+      }
+      
+      setBatchSummaryProgress({ current: 0, total: localBooksToUpdate.length });
+      
+      for (let i = 0; i < localBooksToUpdate.length; i++) {
+        const book = localBooksToUpdate[i];
+        setBatchSummaryProgress({ current: i + 1, total: localBooksToUpdate.length });
+        
+        try {
+          const result = await SummaryGeneratorService.generateSummary({
+            title: book.title,
+            author: book.author.name,
+            genres: book.genre
+          });
+          
+          const updatedBook = {
+            ...book,
+            summary: result,
+            shortSummary: result.substring(0, 150) + '...',
+          };
+          
+          setBooks(prevBooks => 
+            prevBooks.map(b => b.id === book.id ? updatedBook : b)
+          );
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.error(`Failed to generate summary for ${book.title}:`, error);
+        }
+      }
+      
+      toast({
+        title: "All summaries generated",
+        description: `Generated summaries for ${localBooksToUpdate.length} books.`,
+      });
+      
+    } catch (error) {
+      console.error('Batch summary generation failed:', error);
+      toast({
+        title: "Process interrupted",
+        description: "There was an error during batch summary generation.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingAllSummaries(false);
+      setBatchSummaryProgress({ current: 0, total: 0 });
     }
   };
 
@@ -520,6 +596,29 @@ const AdminPanel = () => {
             )}
             
             <div className="space-y-4">
+              <div className="flex justify-between mb-4">
+                <h3 className="text-lg font-medium">Single Book Summary</h3>
+                
+                <Button 
+                  variant="outline"
+                  onClick={handleGenerateAllSummaries}
+                  disabled={showApiKeyInput || isGeneratingAllSummaries || isGeneratingSummary}
+                  className="flex items-center"
+                >
+                  {isGeneratingAllSummaries ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating All... ({batchSummaryProgress.current}/{batchSummaryProgress.total})
+                    </>
+                  ) : (
+                    <>
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      Generate All Book Summaries
+                    </>
+                  )}
+                </Button>
+              </div>
+              
               <div>
                 <Label htmlFor="bookTitle">Book Title</Label>
                 <Input 
@@ -527,7 +626,7 @@ const AdminPanel = () => {
                   value={summaryBookTitle}
                   onChange={(e) => setSummaryBookTitle(e.target.value)}
                   placeholder="Enter book title"
-                  disabled={showApiKeyInput}
+                  disabled={showApiKeyInput || isGeneratingAllSummaries}
                 />
               </div>
               
@@ -538,7 +637,7 @@ const AdminPanel = () => {
                   value={summaryAuthorName}
                   onChange={(e) => setSummaryAuthorName(e.target.value)}
                   placeholder="Enter author name"
-                  disabled={showApiKeyInput}
+                  disabled={showApiKeyInput || isGeneratingAllSummaries}
                 />
               </div>
               
@@ -567,7 +666,7 @@ const AdminPanel = () => {
               <Button 
                 className="w-full" 
                 onClick={handleGenerateSummary}
-                disabled={showApiKeyInput || isGeneratingSummary}
+                disabled={showApiKeyInput || isGeneratingSummary || isGeneratingAllSummaries}
               >
                 {isGeneratingSummary ? (
                   <>
