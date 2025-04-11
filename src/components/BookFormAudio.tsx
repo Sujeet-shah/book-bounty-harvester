@@ -1,6 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Book, authors as allAuthors } from '@/lib/data';
+import { SummaryGeneratorService } from '@/services/summary-generator.service';
+import { Wand2, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 // Book Form Component for Adding/Editing Books with Audio Summary support
 const BookForm = ({ 
@@ -22,6 +26,8 @@ const BookForm = ({
   const [pageCount, setPageCount] = useState(book?.pageCount || 0);
   const [yearPublished, setYearPublished] = useState(book?.yearPublished || new Date().getFullYear());
   const [audioSummaryUrl, setAudioSummaryUrl] = useState(book?.audioSummaryUrl || '');
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const { toast } = useToast();
   
   const handleGenreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -55,6 +61,63 @@ const BookForm = ({
     };
     
     onSave(updatedBook);
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please enter a book title to generate a summary",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsGeneratingSummary(true);
+      
+      // Get the author's name from the selected author ID
+      const author = allAuthors.find(a => a.id === authorId);
+      
+      const data = {
+        title: title,
+        author: author?.name,
+        genres: genre.length > 0 ? genre : undefined,
+      };
+      
+      // Check if API key is available
+      if (!SummaryGeneratorService.getApiKey()) {
+        toast({
+          title: "API Key Required",
+          description: "Please set your API key in the Summaries tab of the Admin Panel first.",
+          variant: "destructive",
+        });
+        setIsGeneratingSummary(false);
+        return;
+      }
+      
+      const result = await SummaryGeneratorService.generateSummary(data);
+      setSummary(result);
+      
+      // Set a shortened version for the short summary if it's empty
+      if (!shortSummary.trim()) {
+        setShortSummary(result.substring(0, 150) + '...');
+      }
+      
+      toast({
+        title: "Summary generated",
+        description: "Book summary has been generated successfully",
+      });
+    } catch (error) {
+      console.error('Summary generation failed:', error);
+      toast({
+        title: "Summary generation failed",
+        description: error instanceof Error ? error.message : "There was an error generating the summary.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingSummary(false);
+    }
   };
 
   return (
@@ -200,9 +263,31 @@ const BookForm = ({
       </div>
       
       <div className="mb-6">
-        <label className="block text-sm font-medium text-muted-foreground mb-2">
-          Full Summary
-        </label>
+        <div className="flex justify-between items-center mb-2">
+          <label className="block text-sm font-medium text-muted-foreground">
+            Full Summary
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleGenerateSummary}
+            disabled={isGeneratingSummary}
+            className="text-xs"
+          >
+            {isGeneratingSummary ? (
+              <>
+                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Wand2 className="mr-2 h-3 w-3" />
+                Auto Generate
+              </>
+            )}
+          </Button>
+        </div>
         <textarea
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
