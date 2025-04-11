@@ -76,11 +76,12 @@ class SummaryGeneratorService {
         prompt += `. The summary should cover the main themes, characters, and key points of the book.`;
       }
       
-      console.log('Sending request to Gemini API...');
+      console.log('Sending request to Gemini API with key:', apiKey.substring(0, 8) + '...');
+      console.log('Request prompt:', prompt);
       
       // Make the API request to Gemini
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: {
@@ -116,7 +117,7 @@ class SummaryGeneratorService {
       }
       
       const responseData = await response.json();
-      console.log('Response data received');
+      console.log('Response data received:', responseData);
       
       // Extract the summary from the response
       const generatedText = responseData.contents?.[0]?.parts?.[0]?.text;
