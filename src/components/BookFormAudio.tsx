@@ -1,10 +1,17 @@
-
 import { useState, useEffect } from 'react';
 import { Book, authors as allAuthors } from '@/lib/data';
 import { SummaryGeneratorService } from '@/services/summary-generator.service';
 import { Wand2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Book Form Component for Adding/Editing Books with Audio Summary support
 const BookForm = ({ 
@@ -129,12 +136,11 @@ const BookForm = ({
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             Book Title
           </label>
-          <input
+          <Input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             placeholder="Enter book title"
           />
         </div>
@@ -143,29 +149,29 @@ const BookForm = ({
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             Author
           </label>
-          <select
-            value={authorId}
-            onChange={(e) => setAuthorId(e.target.value)}
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          >
-            {allAuthors.map((author) => (
-              <option key={author.id} value={author.id}>
-                {author.name}
-              </option>
-            ))}
-          </select>
+          <Select value={authorId} onValueChange={(value) => setAuthorId(value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select author" />
+            </SelectTrigger>
+            <SelectContent>
+              {allAuthors.map((author) => (
+                <SelectItem key={author.id} value={author.id}>
+                  {author.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             Cover Image URL
           </label>
-          <input
+          <Input
             type="url"
             value={coverUrl}
             onChange={(e) => setCoverUrl(e.target.value)}
             required
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             placeholder="Enter image URL"
           />
         </div>
@@ -174,11 +180,10 @@ const BookForm = ({
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             Audio Summary URL
           </label>
-          <input
+          <Input
             type="url"
             value={audioSummaryUrl}
             onChange={(e) => setAudioSummaryUrl(e.target.value)}
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             placeholder="Enter audio file URL (optional)"
           />
         </div>
@@ -188,12 +193,11 @@ const BookForm = ({
             <label className="block text-sm font-medium text-muted-foreground mb-2">
               Page Count
             </label>
-            <input
+            <Input
               type="number"
               value={pageCount}
               onChange={(e) => setPageCount(Number(e.target.value))}
               min="0"
-              className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
           
@@ -201,13 +205,12 @@ const BookForm = ({
             <label className="block text-sm font-medium text-muted-foreground mb-2">
               Year Published
             </label>
-            <input
+            <Input
               type="number"
               value={yearPublished}
               onChange={(e) => setYearPublished(Number(e.target.value))}
               min="1000"
               max={new Date().getFullYear()}
-              className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
         </div>
@@ -216,14 +219,13 @@ const BookForm = ({
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             Rating (0-5)
           </label>
-          <input
+          <Input
             type="number"
             value={rating}
             onChange={(e) => setRating(Number(e.target.value))}
             step="0.1"
             min="0"
             max="5"
-            className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
         </div>
         
@@ -252,12 +254,11 @@ const BookForm = ({
         <label className="block text-sm font-medium text-muted-foreground mb-2">
           Short Summary
         </label>
-        <input
+        <Input
           type="text"
           value={shortSummary}
           onChange={(e) => setShortSummary(e.target.value)}
           required
-          className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Brief description (1-2 sentences)"
         />
       </div>
