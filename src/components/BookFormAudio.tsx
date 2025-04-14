@@ -79,12 +79,10 @@ const BookForm = ({
     try {
       setIsGeneratingSummary(true);
       
-      // Get the author's name from the selected author ID
-      const author = allAuthors.find(a => a.id === authorId);
-      
+      // Instead of using authorId, we'll use the authorName directly
       const data = {
         title: title,
-        author: author?.name,
+        author: authorName, // Updated to use authorName instead of finding by authorId
         genres: genre.length > 0 ? genre : undefined,
       };
       
