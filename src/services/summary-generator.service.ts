@@ -83,22 +83,23 @@ class SummaryGeneratorService {
       
       console.log('Sending request to Gemini API with key:', cleanApiKey.substring(0, 8) + '...');
       console.log('Request prompt:', prompt);
+
+      // Using a CORS proxy to avoid CORS issues in the browser environment
+      // Create the request URL with the API key
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cleanApiKey}`;
       
       // Make the API request to Gemini
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cleanApiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: prompt }]
-            }]
-          }),
-        }
-      );
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }]
+        }),
+      });
       
       console.log('Response status:', response.status);
       
@@ -138,7 +139,8 @@ class SummaryGeneratorService {
       
       // Improve error handling with more specific messages
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Network error: Unable to connect to the Gemini API. Please check your internet connection.');
+        // This might be a CORS issue or network problem
+        throw new Error('Network error: Unable to connect to the Gemini API. Please make sure your API key is correct and that you have a valid internet connection.');
       }
       
       // Rethrow the original error

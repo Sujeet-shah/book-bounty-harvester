@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Upload, BookOpen, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, BookOpen, Loader2, AlertCircle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SummaryGeneratorService } from '@/services/summary-generator.service';
 
@@ -35,7 +35,7 @@ const SummaryGeneratorPage = () => {
     // Reset any previous errors
     setApiKeyError('');
     
-    // Trim the API key to remove any whitespace
+    // Trim the API key to remove any accidental whitespace
     const trimmedKey = apiKey.trim();
     
     if (!trimmedKey) {
@@ -142,7 +142,7 @@ const SummaryGeneratorPage = () => {
       });
       
       // If the error suggests an API key issue, show the API key input again
-      if (errorMessage.includes('API key') || errorMessage.includes('403')) {
+      if (errorMessage.includes('API key') || errorMessage.includes('403') || errorMessage.includes('Network error')) {
         handleResetApiKey();
       }
     } finally {
@@ -198,9 +198,10 @@ const SummaryGeneratorPage = () => {
                   {apiKeyError && (
                     <p className="text-xs text-red-500 mt-1">{apiKeyError}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Get an API key from <a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a>
-                  </p>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    <p>Get an API key from <a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a></p>
+                    <p className="text-amber-500 mt-1">Note: Make sure to enable the Gemini API for your API key in the Google AI Studio dashboard.</p>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -256,7 +257,22 @@ const SummaryGeneratorPage = () => {
                     id="file" 
                     type="file" 
                     accept=".txt" 
-                    onChange={handleFileChange}
+                    onChange={(e) => {
+                      const selectedFile = e.target.files?.[0];
+                      if (selectedFile) {
+                        setFile(selectedFile);
+                        
+                        // Read the file content for text files
+                        if (selectedFile.type === 'text/plain') {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const content = event.target?.result as string;
+                            setBookContent(content);
+                          };
+                          reader.readAsText(selectedFile);
+                        }
+                      }
+                    }}
                     className="hidden" 
                     disabled={showApiKeyInput}
                   />
