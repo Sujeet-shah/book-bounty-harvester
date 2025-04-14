@@ -5,15 +5,7 @@ import { Wand2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
-// Book Form Component for Adding/Editing Books with Audio Summary support
 const BookForm = ({ 
   book, 
   onCancel, 
@@ -24,7 +16,7 @@ const BookForm = ({
   onSave: (book: Book) => void;
 }) => {
   const [title, setTitle] = useState(book?.title || '');
-  const [authorId, setAuthorId] = useState(book?.author.id || allAuthors[0].id);
+  const [authorName, setAuthorName] = useState(book?.author.name || '');
   const [coverUrl, setCoverUrl] = useState(book?.coverUrl || '');
   const [summary, setSummary] = useState(book?.summary || '');
   const [shortSummary, setShortSummary] = useState(book?.shortSummary || '');
@@ -47,7 +39,11 @@ const BookForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const author = allAuthors.find(a => a.id === authorId) || allAuthors[0];
+    // Find or create a new author object based on the entered name
+    const author = allAuthors.find(a => a.name.toLowerCase() === authorName.toLowerCase()) || {
+      id: Date.now().toString(), // Generate a unique ID
+      name: authorName
+    };
     
     const updatedBook: Book = {
       id: book?.id || '',
@@ -149,18 +145,13 @@ const BookForm = ({
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             Author
           </label>
-          <Select value={authorId} onValueChange={(value) => setAuthorId(value)}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select author" />
-            </SelectTrigger>
-            <SelectContent>
-              {allAuthors.map((author) => (
-                <SelectItem key={author.id} value={author.id}>
-                  {author.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            type="text"
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+            required
+            placeholder="Enter author name"
+          />
         </div>
         
         <div>
