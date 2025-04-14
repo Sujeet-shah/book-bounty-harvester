@@ -82,15 +82,15 @@
   }
 
   h1 {
-    @apply text-4xl md:text-5xl;
+    @apply text-3xl xs:text-4xl md:text-5xl;
   }
 
   h2 {
-    @apply text-3xl md:text-4xl;
+    @apply text-2xl xs:text-3xl md:text-4xl;
   }
 
   h3 {
-    @apply text-xl md:text-2xl;
+    @apply text-xl xs:text-xl md:text-2xl;
   }
 
   p {
@@ -100,7 +100,7 @@
 
 @layer components {
   .book-card {
-    @apply relative overflow-hidden bg-white rounded-2xl p-4 transition-all duration-300 border border-border hover:shadow-elegant-hover shadow-elegant;
+    @apply relative overflow-hidden bg-white rounded-2xl p-3 xs:p-4 transition-all duration-300 border border-border hover:shadow-elegant-hover shadow-elegant;
   }
 
   .book-card-image {
@@ -116,27 +116,27 @@
   }
   
   .btn-primary {
-    @apply px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg active:translate-y-[0px] active:shadow;
+    @apply px-4 xs:px-6 py-2 xs:py-3 bg-primary text-primary-foreground rounded-full font-medium transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg active:translate-y-[0px] active:shadow;
   }
   
   .btn-secondary {
-    @apply px-5 py-2 bg-secondary text-secondary-foreground rounded-full font-medium transition-all duration-300 hover:bg-secondary/80;
+    @apply px-4 xs:px-5 py-2 bg-secondary text-secondary-foreground rounded-full font-medium transition-all duration-300 hover:bg-secondary/80;
   }
   
   .btn-icon {
-    @apply flex items-center justify-center w-10 h-10 rounded-full bg-white text-muted-foreground border border-border transition-all duration-300 hover:text-primary hover:border-primary;
+    @apply flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-muted-foreground border border-border transition-all duration-300 hover:text-primary hover:border-primary;
   }
 
   .layout-page {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 animate-fade-in;
+    @apply max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 animate-fade-in;
   }
   
   .layout-section {
-    @apply py-12 md:py-20;
+    @apply py-8 xs:py-10 md:py-16 lg:py-20;
   }
   
   .chip {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground;
+    @apply inline-flex items-center px-2 xs:px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground;
   }
 }
 
@@ -161,4 +161,28 @@
   opacity: 0;
   transform: translateY(-10px);
   transition: opacity 500ms ease-in-out, transform 500ms ease-in-out;
+}
+
+/* Responsive utilities */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
