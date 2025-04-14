@@ -23,10 +23,12 @@ class SummaryGeneratorService {
    * Set the API key for the AI model
    */
   static setApiKey(apiKey: string): void {
-    this.API_KEY = apiKey;
+    // Trim the API key to remove any accidental whitespace
+    const trimmedKey = apiKey.trim();
+    this.API_KEY = trimmedKey;
     // Store the API key temporarily in session storage
     // In production, this should be handled more securely
-    sessionStorage.setItem('ai_api_key', apiKey);
+    sessionStorage.setItem('ai_api_key', trimmedKey);
   }
   
   /**
@@ -41,7 +43,7 @@ class SummaryGeneratorService {
    */
   static validateApiKey(apiKey: string): boolean {
     // Basic validation - Gemini API keys usually start with "AIza"
-    return apiKey && apiKey.startsWith('AIza') && apiKey.length > 20;
+    return apiKey && apiKey.trim().startsWith('AIza') && apiKey.trim().length > 20;
   }
   
   /**
@@ -54,7 +56,10 @@ class SummaryGeneratorService {
       throw new Error('API key not set. Please set an API key first.');
     }
     
-    if (!this.validateApiKey(apiKey)) {
+    // Clean up the API key by trimming whitespace
+    const cleanApiKey = apiKey.trim();
+    
+    if (!this.validateApiKey(cleanApiKey)) {
       throw new Error('Invalid API key format. Please check your API key.');
     }
     
@@ -76,12 +81,12 @@ class SummaryGeneratorService {
         prompt += `. The summary should cover the main themes, characters, and key points of the book.`;
       }
       
-      console.log('Sending request to Gemini API with key:', apiKey.substring(0, 8) + '...');
+      console.log('Sending request to Gemini API with key:', cleanApiKey.substring(0, 8) + '...');
       console.log('Request prompt:', prompt);
       
       // Make the API request to Gemini
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cleanApiKey}`,
         {
           method: 'POST',
           headers: {

@@ -19,6 +19,7 @@ const SummaryGeneratorPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [showApiKeyInput, setShowApiKeyInput] = useState(true);
   const [apiKey, setApiKey] = useState('');
+  const [apiKeyError, setApiKeyError] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,24 +32,45 @@ const SummaryGeneratorPage = () => {
   }, []);
 
   const handleSaveApiKey = () => {
-    if (apiKey.trim()) {
-      SummaryGeneratorService.setApiKey(apiKey.trim());
-      setShowApiKeyInput(false);
-      toast({
-        title: "API Key saved",
-        description: "Your API key has been saved for this session",
-      });
-    } else {
+    // Reset any previous errors
+    setApiKeyError('');
+    
+    // Trim the API key to remove any whitespace
+    const trimmedKey = apiKey.trim();
+    
+    if (!trimmedKey) {
+      setApiKeyError('API key cannot be empty');
       toast({
         title: "API Key required",
         description: "Please enter a valid API key",
         variant: "destructive",
       });
+      return;
     }
+    
+    // Basic validation - Gemini API keys usually start with "AIza"
+    if (!SummaryGeneratorService.validateApiKey(trimmedKey)) {
+      setApiKeyError('Invalid API key format. Gemini API keys usually start with "AIza"');
+      toast({
+        title: "Invalid API Key format",
+        description: "Please check your API key format",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // If validation passes, save the key
+    SummaryGeneratorService.setApiKey(trimmedKey);
+    setShowApiKeyInput(false);
+    toast({
+      title: "API Key saved",
+      description: "Your API key has been saved for this session",
+    });
   };
 
   const handleResetApiKey = () => {
     setApiKey('');
+    setApiKeyError('');
     sessionStorage.removeItem('ai_api_key');
     setShowApiKeyInput(true);
   };
@@ -80,7 +102,8 @@ const SummaryGeneratorPage = () => {
       return;
     }
 
-    if (!SummaryGeneratorService.getApiKey()) {
+    const savedApiKey = SummaryGeneratorService.getApiKey();
+    if (!savedApiKey) {
       toast({
         title: "API Key required",
         description: "Please set your API key first",
@@ -110,11 +133,18 @@ const SummaryGeneratorPage = () => {
       });
     } catch (error) {
       console.error('Summary generation failed:', error);
+      const errorMessage = error instanceof Error ? error.message : "There was an error generating the summary. Please check your API key.";
+      
       toast({
         title: "Summary generation failed",
-        description: "There was an error generating the summary. Please check your API key.",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // If the error suggests an API key issue, show the API key input again
+      if (errorMessage.includes('API key') || errorMessage.includes('403')) {
+        handleResetApiKey();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +186,7 @@ const SummaryGeneratorPage = () => {
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
                       placeholder="Enter your Gemini API key"
-                      className="flex-1"
+                      className={`flex-1 ${apiKeyError ? 'border-red-500' : ''}`}
                     />
                     <Button 
                       className="ml-2"
@@ -165,6 +195,9 @@ const SummaryGeneratorPage = () => {
                       Save Key
                     </Button>
                   </div>
+                  {apiKeyError && (
+                    <p className="text-xs text-red-500 mt-1">{apiKeyError}</p>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">
                     Get an API key from <a href="https://ai.google.dev/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a>
                   </p>
