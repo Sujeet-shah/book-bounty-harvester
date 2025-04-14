@@ -29,7 +29,14 @@ export const generateBookMetaTags = (book: Book) => {
       url: `/book/${book.id}/${createSlug(book.title)}`,
       type: 'book',
       author: book.author.name
-    }
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      image: book.coverUrl || '/og-image.png'
+    },
+    canonical: getCanonicalUrl(book)
   };
 };
 
@@ -130,6 +137,11 @@ export const generatePageMetaTags = (
       description,
       url: `/${path || title.toLowerCase().replace(/\s+/g, '-')}`,
       type: 'website'
+    },
+    twitter: {
+      card: 'summary',
+      title: `${title} | BookSummary App`,
+      description
     }
   };
 };

@@ -12,25 +12,30 @@ interface SEOStructuredDataProps {
 const SEOStructuredData: React.FC<SEOStructuredDataProps> = ({ 
   type = 'website', 
   data,
-  url = "https://book-bounty-harvester.lovable.app",
+  url,
   breadcrumbs
 }) => {
+  // Get the current URL if not provided
+  const currentUrl = url || (typeof window !== 'undefined' 
+    ? window.location.href 
+    : "https://book-bounty-harvester.lovable.app");
+  
   // Generate the appropriate structured data based on the type
   const getStructuredData = () => {
     switch (type) {
       case 'website':
-        return generateWebsiteStructuredData(url);
+        return generateWebsiteStructuredData(currentUrl);
       case 'book':
-        if (!data) return generateWebsiteStructuredData(url);
-        return generateBookStructuredData(data, url);
+        if (!data) return generateWebsiteStructuredData(currentUrl);
+        return generateBookStructuredData(data, currentUrl);
       case 'faq':
-        if (!data) return generateWebsiteStructuredData(url);
+        if (!data) return generateWebsiteStructuredData(currentUrl);
         return generateFAQStructuredData(data);
       case 'breadcrumb':
-        if (!breadcrumbs) return generateWebsiteStructuredData(url);
-        return generateBreadcrumbStructuredData(breadcrumbs, url);
+        if (!breadcrumbs) return generateWebsiteStructuredData(currentUrl);
+        return generateBreadcrumbStructuredData(breadcrumbs, currentUrl);
       default:
-        return generateWebsiteStructuredData(url);
+        return generateWebsiteStructuredData(currentUrl);
     }
   };
 
