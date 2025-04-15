@@ -73,12 +73,15 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased tracking-tight;
+    @apply bg-background text-foreground antialiased tracking-tight font-sans;
     font-feature-settings: "ss01", "ss02", "ss03", "cv01", "cv02", "cv03";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tighter;
+    @apply font-medium tracking-tight;
+    letter-spacing: -0.015em;
   }
 
   h1 {

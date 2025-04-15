@@ -25,14 +25,16 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: [
+					'Inter',
+					'Roboto',
+					'system-ui',
 					'-apple-system',
 					'BlinkMacSystemFont',
-					'San Francisco',
 					'Segoe UI',
-					'Roboto',
-					'Ubuntu',
 					'sans-serif',
 				],
+				serif: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
+				mono: ['Menlo', 'Monaco', 'Courier New', 'monospace'],
 			},
 			screens: {
 				'xs': '480px',
