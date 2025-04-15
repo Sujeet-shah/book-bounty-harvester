@@ -135,7 +135,7 @@ const AboutPage = () => {
             </div>
           </section>
           
-          <section className="glass-panel p-6 mb-8 rounded-lg">
+          <section className="glass-panel p-6 rounded-lg">
             <h2 className="text-xl font-semibold mb-4">Our Team</h2>
             <p className="text-muted-foreground mb-6">
               BookSummary App is powered by a dedicated team of writers, editors, and developers who are passionate 
@@ -185,9 +185,9 @@ const AboutPage = () => {
               </div>
             </div>
             
-            <div className="border-t border-gray-200 pt-4 mt-6">
+            <div className="border-t border-gray-200 pt-4 mt-6 flex flex-col items-center">
               <p className="font-medium mb-3">Follow us:</p>
-              <div className="flex space-x-4 items-center">
+              <div className="flex space-x-4 items-center justify-center w-full">
                 <a 
                   href="#" 
                   className="text-muted-foreground hover:text-[#1877F2] transition-colors group"
