@@ -37,13 +37,13 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222.2 47.4% 11.2%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 47.4% 11.2%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 217.2 91.2% 59.8%;
@@ -64,6 +64,36 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+  }
+
+  .reading {
+    --background: 47 100% 96%;
+    --foreground: 30 24% 20%;
+
+    --card: 47 100% 96%;
+    --card-foreground: 30 24% 20%;
+
+    --popover: 47 100% 96%;
+    --popover-foreground: 30 24% 20%;
+
+    --primary: 34 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 38 92% 90%;
+    --secondary-foreground: 30 24% 20%;
+
+    --muted: 38 92% 90%;
+    --muted-foreground: 30 14% 40%;
+
+    --accent: 38 92% 90%;
+    --accent-foreground: 30 24% 20%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 30 24% 80%;
+    --input: 30 24% 80%;
+    --ring: 30 24% 20%;
   }
 }
 
@@ -103,7 +133,7 @@
 
 @layer components {
   .book-card {
-    @apply relative overflow-hidden bg-white rounded-2xl p-3 xs:p-4 transition-all duration-300 border border-border hover:shadow-elegant-hover shadow-elegant;
+    @apply relative overflow-hidden bg-white dark:bg-gray-800 reading:bg-amber-50 rounded-2xl p-3 xs:p-4 transition-all duration-300 border border-border hover:shadow-elegant-hover shadow-elegant;
   }
 
   .book-card-image {
@@ -115,7 +145,7 @@
   }
   
   .glass-panel {
-    @apply rounded-2xl bg-white/90 backdrop-blur-xl border border-white/20 shadow-elegant;
+    @apply rounded-2xl bg-white/90 dark:bg-gray-800/90 reading:bg-amber-50/90 backdrop-blur-xl border border-white/20 dark:border-gray-700/20 reading:border-amber-200/20 shadow-elegant;
   }
   
   .btn-primary {
@@ -127,7 +157,7 @@
   }
   
   .btn-icon {
-    @apply flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-muted-foreground border border-border transition-all duration-300 hover:text-primary hover:border-primary;
+    @apply flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-gray-800 reading:bg-amber-50 text-muted-foreground border border-border transition-all duration-300 hover:text-primary hover:border-primary;
   }
 
   .layout-page {

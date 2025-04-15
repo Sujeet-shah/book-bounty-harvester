@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { authService } from '@/services/auth.service';
 import Logo from './Logo';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -107,6 +108,8 @@ const Navbar = () => {
         )}
         
         <div className="flex items-center space-x-4">
+          <ThemeToggle />
+          
           {isLoggedIn ? (
             <>
               <Link to="/profile">
@@ -169,6 +172,10 @@ const Navbar = () => {
                 <span>Admin Dashboard</span>
               </Link>
             )}
+            
+            <div className="py-2">
+              <ThemeToggle />
+            </div>
             
             {isLoggedIn ? (
               <>
