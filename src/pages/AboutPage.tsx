@@ -1,10 +1,10 @@
-
 import React from 'react';
+import { Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { Helmet } from 'react-helmet-async';
 import { generatePageMetaTags, generateWebsiteStructuredData, generateFAQStructuredData } from '@/lib/seo';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Coffee, Globe, Mail } from 'lucide-react';
+import { ArrowRight, BookOpen, Mail, Globe } from 'lucide-react';
 
 const AboutPage = () => {
   const metaTags = generatePageMetaTags(
@@ -187,11 +187,47 @@ const AboutPage = () => {
             
             <div className="border-t border-gray-200 pt-4 mt-6">
               <p className="font-medium mb-3">Follow us:</p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Twitter</a>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Facebook</a>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Instagram</a>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">LinkedIn</a>
+              <div className="flex space-x-4 items-center">
+                <a 
+                  href="#" 
+                  className="text-muted-foreground hover:text-[#1877F2] transition-colors group"
+                  aria-label="Facebook"
+                >
+                  <Facebook 
+                    className="h-5 w-5 group-hover:scale-110 transition-transform" 
+                    strokeWidth={1.5} 
+                  />
+                </a>
+                <a 
+                  href="#" 
+                  className="text-muted-foreground hover:text-[#1DA1F2] transition-colors group"
+                  aria-label="Twitter"
+                >
+                  <Twitter 
+                    className="h-5 w-5 group-hover:scale-110 transition-transform" 
+                    strokeWidth={1.5} 
+                  />
+                </a>
+                <a 
+                  href="#" 
+                  className="text-muted-foreground hover:text-[#E1306C] transition-colors group"
+                  aria-label="Instagram"
+                >
+                  <Instagram 
+                    className="h-5 w-5 group-hover:scale-110 transition-transform" 
+                    strokeWidth={1.5} 
+                  />
+                </a>
+                <a 
+                  href="#" 
+                  className="text-muted-foreground hover:text-[#0A66C2] transition-colors group"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin 
+                    className="h-5 w-5 group-hover:scale-110 transition-transform" 
+                    strokeWidth={1.5} 
+                  />
+                </a>
               </div>
             </div>
             
