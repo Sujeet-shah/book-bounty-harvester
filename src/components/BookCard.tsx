@@ -90,14 +90,14 @@ const BookCard = ({ book, className, onBookClick }: BookCardProps) => {
       </div>
       
       <div className="flex flex-col space-y-1">
-        <h3 className="font-medium line-clamp-1 group-hover:text-primary transition-colors">
+        <h3 className="font-medium line-clamp-2 break-words text-sm xs:text-base group-hover:text-primary transition-colors">
           {onBookClick ? (
             <div onClick={handleClick} className="cursor-pointer">{book.title}</div>
           ) : (
             <Link to={`/book/${book.id}`}>{book.title}</Link>
           )}
         </h3>
-        <p className="text-sm text-muted-foreground line-clamp-1">{book.author.name}</p>
+        <p className="text-xs xs:text-sm text-muted-foreground line-clamp-1">{book.author.name}</p>
         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{book.shortSummary}</p>
       </div>
     </div>
