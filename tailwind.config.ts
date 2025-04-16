@@ -1,28 +1,27 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
-	darkMode: ["class"],
-	content: [
-		"./pages/**/*.{ts,tsx}",
-		"./components/**/*.{ts,tsx}",
-		"./app/**/*.{ts,tsx}",
-		"./src/**/*.{ts,tsx}",
-	],
-	prefix: "",
-	theme: {
-		container: {
-			center: true,
-			padding: {
-				DEFAULT: '1rem',
-				sm: '1.5rem',
-				lg: '2rem'
-			},
-			screens: {
-				'2xl': '1400px'
-			}
-		},
-		extend: {
+  darkMode: ["class"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '0.5rem',  // Reduced default padding
+        sm: '1rem',          // Slightly more padding on small screens
+        lg: '1.5rem'         // More padding on larger screens
+      },
+      screens: {
+        '2xl': '1400px'
+      }
+    },
+    extend: {
 			fontFamily: {
 				sans: [
 					'Inter',
@@ -152,8 +151,8 @@ export default {
 				'subtle': '0 2px 10px rgba(0, 0, 0, 0.03)',
 			}
 		}
-	},
-	plugins: [
+  },
+  plugins: [
 		require("tailwindcss-animate"),
 		function({ addVariant }) {
 			// Add 'reading' as a variant similar to 'dark'
