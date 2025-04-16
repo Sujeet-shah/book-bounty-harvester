@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
-import FeaturedBook from '@/components/FeaturedBook';
 import BookCard from '@/components/BookCard';
+import FeaturedBooksSlider from '@/components/FeaturedBooksSlider';
 import { Book, books as defaultBooks } from '@/lib/data';
 import { Helmet } from 'react-helmet-async';
 import { generatePageMetaTags, generateWebsiteStructuredData } from '@/lib/seo';
@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [localBooks, setLocalBooks] = useState<Book[]>([]);
-  const [featuredBook, setFeaturedBook] = useState<Book | null>(null);
+  const [featuredBooks, setFeaturedBooks] = useState<Book[]>([]);
   const [trendingBooks, setTrendingBooks] = useState<Book[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -115,11 +115,11 @@ const Index = () => {
     const storedBooks = localStorage.getItem('bookSummaryBooks');
     const allBooks = storedBooks ? JSON.parse(storedBooks) : defaultBooks;
     
-    const featured = allBooks.find((book: Book) => book.isFeatured);
-    setFeaturedBook(featured || null);
+    const featured = allBooks.filter((book: Book) => book.isFeatured);
+    setFeaturedBooks(featured);
     
     const trending = allBooks
-      .filter((book: Book) => book.isTrending && (!featured || book.id !== featured.id))
+      .filter((book: Book) => book.isTrending && !book.isFeatured)
       .slice(0, 4);
     setTrendingBooks(trending);
     
@@ -156,6 +156,27 @@ const Index = () => {
 
   const gutendexBooks = gutendexData ? convertGutendexBooks(gutendexData.results) : [];
   const modernBooks = modernBooksData ? convertGutendexBooks(modernBooksData.results) : [];
+
+  useEffect(() => {
+    if (featuredBooks.length < 2 && modernBooks.length > 0) {
+      const additionalFeatured = modernBooks.slice(0, 3).map(book => ({
+        ...book,
+        isFeatured: true
+      }));
+      
+      setFeaturedBooks(prev => {
+        const combinedBooks = [...prev];
+        
+        additionalFeatured.forEach(newBook => {
+          if (!combinedBooks.some(book => book.id === newBook.id)) {
+            combinedBooks.push(newBook);
+          }
+        });
+        
+        return combinedBooks;
+      });
+    }
+  }, [modernBooks, featuredBooks]);
 
   const displayBooks = searchTerm ? gutendexBooks : [...localBooks, ...gutendexBooks];
 
@@ -281,10 +302,8 @@ const Index = () => {
             </>
           ) : (
             <>
-              {featuredBook && (
-                <div className="mb-16">
-                  <FeaturedBook book={featuredBook} />
-                </div>
+              {featuredBooks.length > 0 && (
+                <FeaturedBooksSlider books={featuredBooks} />
               )}
               
               <div className="mb-16">
@@ -299,7 +318,7 @@ const Index = () => {
                     <p className="text-muted-foreground">Loading modern classics...</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                     {modernBooks.slice(0, 10).map((book) => (
                       <BookCard key={book.id} book={book} onBookClick={() => handleBookClick(book.id)} />
                     ))}
