@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, BookComment, comments as allComments } from '@/lib/data';
 import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image as ImageIcon, AlertCircle, Book as BookIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BookDetailProps {
   book: Book;
@@ -20,6 +22,7 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
     allComments.filter(comment => comment.bookId === book.id)
   );
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const isMobile = useIsMobile();
 
   // Get current user if logged in
   useEffect(() => {
@@ -227,7 +230,10 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
     <div className="max-w-4xl mx-auto animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
         {/* Book Cover Column */}
-        <div className="md:col-span-1 self-start sticky top-24">
+        <div className={cn(
+          "md:col-span-1 self-start",
+          isMobile ? "" : "sticky top-24"
+        )}>
           <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-elegant-hover">
             <img 
               src={book.coverUrl} 
