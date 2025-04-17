@@ -14,9 +14,9 @@ export default {
     container: {
       center: true,
       padding: {
-        DEFAULT: '0.25rem',  // Further reduced default padding
-        sm: '0.5rem',         // Reduced padding on small screens
-        lg: '1rem'            // Reduced padding on larger screens
+        DEFAULT: '0.1rem',  // Even further reduced default padding
+        sm: '0.25rem',      // Minimal padding on small screens
+        lg: '0.5rem'        // Minimal padding on larger screens
       },
       screens: {
         '2xl': '1400px'

@@ -231,8 +231,8 @@ const Index = () => {
       
       <Navbar />
       
-      <main className="pt-24 px-2 pb-16">
-        <div className="max-w-full md:max-w-7xl mx-auto px-1">
+      <main className="pt-24 px-1 pb-16">
+        <div className="max-w-full md:max-w-full mx-auto px-1">
           <div className="mb-8 max-w-2xl mx-auto">
             <SearchBar onSearch={handleSearch} initialValue={searchTerm} />
           </div>
