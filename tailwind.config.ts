@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -13,9 +14,9 @@ export default {
     container: {
       center: true,
       padding: {
-        DEFAULT: '0.5rem',  // Reduced default padding
-        sm: '1rem',          // Slightly more padding on small screens
-        lg: '1.5rem'         // More padding on larger screens
+        DEFAULT: '0.25rem',  // Further reduced default padding
+        sm: '0.5rem',         // Reduced padding on small screens
+        lg: '1rem'            // Reduced padding on larger screens
       },
       screens: {
         '2xl': '1400px'

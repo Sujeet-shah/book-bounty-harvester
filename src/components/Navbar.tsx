@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Search, User, LogIn, Clock, Sparkles, Shield, BookOpen } from 'lucide-react';
+import { Menu, X, Search, User, LogIn, Clock, BookOpen, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -51,7 +51,6 @@ const Navbar = () => {
   
   const navLinks = [
     { label: 'Home', path: '/', icon: <BookOpen className="h-4 w-4 mr-2" /> },
-    { label: 'Modern Books', path: '/modern-books', icon: <Sparkles className="h-4 w-4 mr-2" /> },
     { label: 'Trending', path: '/trending', icon: <Clock className="h-4 w-4 mr-2" /> },
     { label: 'Categories', path: '/categories', icon: <Search className="h-4 w-4 mr-2" /> },
     { label: 'Generate Summary', path: '/generate-summary', icon: <BookOpen className="h-4 w-4 mr-2" /> },
@@ -75,7 +74,7 @@ const Navbar = () => {
       "fixed top-0 left-0 w-full z-50 transition-colors",
       isScrolled ? "bg-background/90 backdrop-blur-sm shadow-subtle" : "bg-transparent",
     )}>
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="max-w-screen-2xl mx-auto px-2 sm:px-3 py-3 flex items-center justify-between">
         <Logo variant={isMobile ? 'compact' : 'default'} />
         
         {isMobile ? (
@@ -83,12 +82,12 @@ const Navbar = () => {
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         ) : (
-          <nav className="flex items-center space-x-6">
+          <nav className="flex items-center space-x-4">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.icon}
                 <span>{link.label}</span>
@@ -98,7 +97,7 @@ const Navbar = () => {
             {isAdmin && (
               <Link
                 to="/admin"
-                className="flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
+                className="flex items-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
               >
                 <Shield className="h-4 w-4 mr-2" />
                 <span>Admin</span>
@@ -107,13 +106,13 @@ const Navbar = () => {
           </nav>
         )}
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <ThemeToggle />
           
           {isLoggedIn ? (
             <>
               <Link to="/profile">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2">
                   <User className="h-4 w-4 mr-2" />
                   Profile
                 </Button>
@@ -125,7 +124,7 @@ const Navbar = () => {
           ) : (
             <>
               <Link to="/login">
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="px-2">
                   <LogIn className="h-4 w-4 mr-2" />
                   Login
                 </Button>
