@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BlogPost } from '@/lib/blog';
-import { Clock, Calendar, User, Tag as TagIcon } from 'lucide-react';
+import { Clock, Calendar, User, Tag as TagIcon, Image as ImageIcon } from 'lucide-react';
 import { Badge } from './ui/badge';
 import ReactMarkdown from 'react-markdown';
 
@@ -10,6 +10,51 @@ interface BlogPostContentProps {
 }
 
 const BlogPostContent: React.FC<BlogPostContentProps> = ({ post }) => {
+  // Render rich content sections if available
+  const renderRichContent = () => {
+    if (!post.richContent || post.richContent.length === 0) {
+      // Fallback to normal markdown content
+      return <ReactMarkdown>{post.content}</ReactMarkdown>;
+    }
+
+    return post.richContent.map((section, index) => {
+      if (section.type === 'text') {
+        return (
+          <div key={index} className="mb-6">
+            <ReactMarkdown>{section.content}</ReactMarkdown>
+          </div>
+        );
+      } else if (section.type === 'image') {
+        return (
+          <figure key={index} className="mb-8">
+            <div className="rounded-xl overflow-hidden mb-2">
+              <img 
+                src={section.imageUrl} 
+                alt={section.caption || `Image ${index + 1}`} 
+                className="w-full object-cover"
+              />
+            </div>
+            {section.caption && (
+              <figcaption className="text-sm text-center text-muted-foreground italic">
+                {section.caption}
+              </figcaption>
+            )}
+          </figure>
+        );
+      } else if (section.type === 'quote') {
+        return (
+          <blockquote 
+            key={index} 
+            className="border-l-4 border-primary pl-4 italic my-6 text-xl"
+          >
+            {section.content}
+          </blockquote>
+        );
+      }
+      return null;
+    });
+  };
+
   return (
     <article className="prose prose-sm sm:prose lg:prose-lg dark:prose-invert mx-auto">
       {post.coverImage && (
@@ -56,9 +101,7 @@ const BlogPostContent: React.FC<BlogPostContentProps> = ({ post }) => {
         </div>
       </header>
       
-      <ReactMarkdown>
-        {post.content}
-      </ReactMarkdown>
+      {renderRichContent()}
     </article>
   );
 };

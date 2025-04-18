@@ -1,7 +1,6 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Edit, FileText, Plus, Trash2, Search, Tag } from 'lucide-react';
+import { BookOpen, Edit, FileText, Plus, Trash2, Search, Tag, Image as ImageIcon, Quote, MessageSquareQuote } from 'lucide-react';
 import { BlogPost, loadBlogPosts, saveBlogPosts, createSlug } from '@/lib/blog';
 import { calculateReadingTime } from '@/lib/seo';
 import { Input } from './ui/input';
@@ -27,6 +26,15 @@ import {
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+
+// Define content section types
+interface ContentSection {
+  type: 'text' | 'image' | 'quote';
+  content: string;
+  imageUrl?: string;
+  caption?: string;
+}
 
 const BlogManager = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -42,6 +50,11 @@ const BlogManager = () => {
     coverImage: '',
     tags: ''
   });
+  const [contentSections, setContentSections] = useState<ContentSection[]>([
+    { type: 'text', content: '' }
+  ]);
+  const [editMode, setEditMode] = useState<'simple' | 'rich'>('simple');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const navigate = useNavigate();
   
@@ -70,6 +83,8 @@ const BlogManager = () => {
       coverImage: '',
       tags: ''
     });
+    setContentSections([{ type: 'text', content: '' }]);
+    setEditMode('simple');
     setIsEditDialogOpen(true);
   };
   
@@ -83,6 +98,16 @@ const BlogManager = () => {
       coverImage: post.coverImage || '',
       tags: post.tags.join(', ')
     });
+    
+    // Initialize content sections from rich content if available
+    if (post.richContent && post.richContent.length > 0) {
+      setContentSections(post.richContent);
+      setEditMode('rich');
+    } else {
+      setContentSections([{ type: 'text', content: post.content }]);
+      setEditMode('simple');
+    }
+    
     setIsEditDialogOpen(true);
   };
   
@@ -109,6 +134,81 @@ const BlogManager = () => {
     }));
   };
   
+  const handleSectionChange = (index: number, field: keyof ContentSection, value: string) => {
+    const updatedSections = [...contentSections];
+    updatedSections[index] = {
+      ...updatedSections[index],
+      [field]: value
+    };
+    setContentSections(updatedSections);
+  };
+  
+  const handleAddSection = (type: 'text' | 'image' | 'quote') => {
+    const newSection: ContentSection = { 
+      type, 
+      content: type === 'text' ? '' : type === 'quote' ? '' : '',
+      imageUrl: type === 'image' ? '' : undefined,
+      caption: type === 'image' ? '' : undefined
+    };
+    
+    setContentSections([...contentSections, newSection]);
+  };
+  
+  const handleRemoveSection = (index: number) => {
+    if (contentSections.length <= 1) {
+      toast.error('You must have at least one content section');
+      return;
+    }
+    
+    const updatedSections = contentSections.filter((_, i) => i !== index);
+    setContentSections(updatedSections);
+  };
+  
+  const handleMoveSection = (index: number, direction: 'up' | 'down') => {
+    if (
+      (direction === 'up' && index === 0) ||
+      (direction === 'down' && index === contentSections.length - 1)
+    ) {
+      return;
+    }
+    
+    const updatedSections = [...contentSections];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    [updatedSections[index], updatedSections[newIndex]] = 
+      [updatedSections[newIndex], updatedSections[index]];
+    
+    setContentSections(updatedSections);
+  };
+  
+  const handleImageUpload = (index: number) => {
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute('data-section-index', index.toString());
+      fileInputRef.current.click();
+    }
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const sectionIndexAttr = e.target.getAttribute('data-section-index');
+    const sectionIndex = sectionIndexAttr ? parseInt(sectionIndexAttr, 10) : -1;
+    
+    if (file && sectionIndex >= 0) {
+      // For a real app, you would upload to a server/cloud storage
+      // Here we use FileReader to create a data URL for demo purposes
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const imageUrl = ev.target?.result as string;
+        handleSectionChange(sectionIndex, 'imageUrl', imageUrl);
+        // Clear the file input value so the same file can be selected again
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
   const handleSavePost = () => {
     // Validate form data
     if (!formData.title.trim()) {
@@ -121,9 +221,31 @@ const BlogManager = () => {
       return;
     }
     
-    if (!formData.content.trim()) {
-      toast.error('Content is required');
-      return;
+    let content = '';
+    
+    // Process content based on edit mode
+    if (editMode === 'simple') {
+      content = formData.content;
+      if (!content.trim()) {
+        toast.error('Content is required');
+        return;
+      }
+    } else {
+      // Validate rich content
+      const textContentExists = contentSections.some(section => 
+        section.type === 'text' && section.content.trim().length > 0
+      );
+      
+      if (!textContentExists) {
+        toast.error('At least one text section with content is required');
+        return;
+      }
+      
+      // Generate simple content from rich content for backward compatibility
+      content = contentSections
+        .filter(section => section.type === 'text')
+        .map(section => section.content)
+        .join('\n\n');
     }
     
     // Process tags
@@ -132,7 +254,7 @@ const BlogManager = () => {
       .filter(tag => tag.length > 0);
     
     // Calculate reading time
-    const readingTime = calculateReadingTime(formData.content);
+    const readingTime = calculateReadingTime(content);
     
     if (currentPost) {
       // Update existing post
@@ -141,11 +263,12 @@ const BlogManager = () => {
         title: formData.title,
         slug: createSlug(formData.title),
         excerpt: formData.excerpt,
-        content: formData.content,
+        content: content,
         authorName: formData.authorName,
         coverImage: formData.coverImage || currentPost.coverImage,
         tags,
-        readingTime
+        readingTime,
+        richContent: editMode === 'rich' ? contentSections : undefined
       };
       
       const updatedPosts = blogPosts.map(post => 
@@ -162,13 +285,14 @@ const BlogManager = () => {
         title: formData.title,
         slug: createSlug(formData.title),
         excerpt: formData.excerpt,
-        content: formData.content,
+        content: content,
         authorName: formData.authorName,
         coverImage: formData.coverImage,
         tags,
         publishedDate: new Date().toISOString().split('T')[0],
         readingTime,
-        isFeatured: false
+        isFeatured: false,
+        richContent: editMode === 'rich' ? contentSections : undefined
       };
       
       const updatedPosts = [newPost, ...blogPosts];
@@ -226,6 +350,15 @@ const BlogManager = () => {
           </Button>
         </div>
       </div>
+      
+      {/* File input for image uploads */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileChange}
+      />
       
       {blogPosts.length === 0 ? (
         <Alert className="bg-muted/50">
@@ -348,19 +481,209 @@ const BlogManager = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="content">Content (Markdown Supported)</Label>
-              <Textarea
-                id="content"
-                name="content"
-                value={formData.content}
+              <Label htmlFor="coverImage">Cover Image URL</Label>
+              <Input
+                id="coverImage"
+                name="coverImage"
+                value={formData.coverImage}
                 onChange={handleInputChange}
-                placeholder="Write your blog post content here..."
-                rows={15}
-                className="font-mono text-sm"
+                placeholder="https://example.com/image.jpg"
               />
-              <p className="text-xs text-muted-foreground">
-                Use Markdown for formatting. Headers (#, ##), bold (**text**), italic (*text*), lists (-, 1.), etc.
-              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Content Editor</Label>
+              <Tabs value={editMode} onValueChange={(value) => setEditMode(value as 'simple' | 'rich')}>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="simple">Simple Editor</TabsTrigger>
+                  <TabsTrigger value="rich">Rich Content Editor</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="simple" className="space-y-4">
+                  <Textarea
+                    id="content"
+                    name="content"
+                    value={formData.content}
+                    onChange={handleInputChange}
+                    placeholder="Write your blog post content here... Markdown is supported."
+                    rows={15}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use Markdown for formatting. Headers (#, ##), bold (**text**), italic (*text*), lists (-, 1.), etc.
+                  </p>
+                </TabsContent>
+                
+                <TabsContent value="rich" className="space-y-6">
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleAddSection('text')}
+                    >
+                      <FileText className="w-4 h-4 mr-1" /> Add Text
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleAddSection('image')}
+                    >
+                      <ImageIcon className="w-4 h-4 mr-1" /> Add Image
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleAddSection('quote')}
+                    >
+                      <MessageSquareQuote className="w-4 h-4 mr-1" /> Add Quote
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {contentSections.map((section, index) => (
+                      <div key={index} className="border rounded-md p-4 relative">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline">
+                            {section.type === 'text' && 'Text Content'}
+                            {section.type === 'image' && 'Image'}
+                            {section.type === 'quote' && 'Quote'}
+                          </Badge>
+                          
+                          <div className="flex gap-1">
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleMoveSection(index, 'up')}
+                              disabled={index === 0}
+                              className="h-7 w-7"
+                            >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              >
+                                <path d="m18 15-6-6-6 6"/>
+                              </svg>
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleMoveSection(index, 'down')}
+                              disabled={index === contentSections.length - 1}
+                              className="h-7 w-7"
+                            >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              >
+                                <path d="m6 9 6 6 6-6"/>
+                              </svg>
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleRemoveSection(index)}
+                              className="h-7 w-7 text-destructive hover:text-destructive/90"
+                            >
+                              <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              >
+                                <path d="M3 6h18"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                <line x1="14" y1="11" x2="14" y2="17"/>
+                              </svg>
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {section.type === 'text' && (
+                          <Textarea
+                            value={section.content}
+                            onChange={(e) => handleSectionChange(index, 'content', e.target.value)}
+                            placeholder="Enter text content (Markdown supported)..."
+                            rows={5}
+                          />
+                        )}
+                        
+                        {section.type === 'image' && (
+                          <div className="space-y-3">
+                            {section.imageUrl ? (
+                              <div className="relative">
+                                <img 
+                                  src={section.imageUrl} 
+                                  alt="Uploaded content" 
+                                  className="max-h-64 object-contain rounded-md border"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-2"
+                                  onClick={() => handleImageUpload(index)}
+                                >
+                                  Replace Image
+                                </Button>
+                              </div>
+                            ) : (
+                              <div 
+                                className="border-2 border-dashed rounded-md p-8 text-center cursor-pointer hover:bg-muted/30 transition-colors"
+                                onClick={() => handleImageUpload(index)}
+                              >
+                                <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground" />
+                                <p className="mt-2 text-muted-foreground">Click to upload an image</p>
+                              </div>
+                            )}
+                            <Input
+                              value={section.caption || ''}
+                              onChange={(e) => handleSectionChange(index, 'caption', e.target.value)}
+                              placeholder="Image caption (optional)"
+                            />
+                          </div>
+                        )}
+                        
+                        {section.type === 'quote' && (
+                          <Textarea
+                            value={section.content}
+                            onChange={(e) => handleSectionChange(index, 'content', e.target.value)}
+                            placeholder="Enter quote text..."
+                            rows={3}
+                            className="italic"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -376,26 +699,15 @@ const BlogManager = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="coverImage">Cover Image URL</Label>
+                <Label htmlFor="tags">Tags (comma separated)</Label>
                 <Input
-                  id="coverImage"
-                  name="coverImage"
-                  value={formData.coverImage}
+                  id="tags"
+                  name="tags"
+                  value={formData.tags}
                   onChange={handleInputChange}
-                  placeholder="https://example.com/image.jpg"
+                  placeholder="Entrepreneurship, Business, Book Summaries"
                 />
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="tags">Tags (comma separated)</Label>
-              <Input
-                id="tags"
-                name="tags"
-                value={formData.tags}
-                onChange={handleInputChange}
-                placeholder="Entrepreneurship, Business, Book Summaries"
-              />
             </div>
           </div>
           

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, BookComment, comments as allComments } from '@/lib/data';
@@ -5,6 +6,13 @@ import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image a
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Define rich content section types
+interface ContentSection {
+  type: 'text' | 'image';
+  content: string;
+  caption?: string;
+}
 
 interface BookDetailProps {
   book: Book;
