@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, BookComment, comments as allComments } from '@/lib/data';
@@ -24,7 +23,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
   const [currentUser, setCurrentUser] = useState<any>(null);
   const isMobile = useIsMobile();
 
-  // Get current user if logged in
   useEffect(() => {
     const userJson = localStorage.getItem('currentUser');
     if (userJson) {
@@ -32,7 +30,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
         const user = JSON.parse(userJson);
         setCurrentUser(user);
       } catch (error) {
-        // Invalid JSON in localStorage
         console.error("Error parsing user data:", error);
       }
     }
@@ -41,7 +38,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check if user is logged in
     const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true' || 
                       localStorage.getItem('adminLoggedIn') === 'true';
     
@@ -72,7 +68,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
   };
 
   const handleLikeAction = () => {
-    // Check if user is logged in
     const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true' || 
                       localStorage.getItem('adminLoggedIn') === 'true';
     
@@ -91,7 +86,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
   };
 
   const handleBookmarkAction = () => {
-    // Check if user is logged in
     const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true' || 
                       localStorage.getItem('adminLoggedIn') === 'true';
     
@@ -109,7 +103,27 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
     setIsBookmarked(!isBookmarked);
   };
 
-  // Render the rich summary sections if available
+  const handleShare = async () => {
+    const shareData = {
+      title: `${book.title} by ${book.author.name}`,
+      text: book.shortSummary || `Check out this book: ${book.title} by ${book.author.name}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        toast.success('Shared successfully!');
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      toast.error('Failed to share');
+    }
+  };
+
   const renderRichSummary = () => {
     if (!book.richSummary) {
       return <p className="leading-relaxed text-foreground mb-4">{book.summary}</p>;
@@ -144,10 +158,8 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
     });
   };
 
-  // Generate a description based on book type
   const renderBookSummary = () => {
     if (isGutenbergBook) {
-      // For Gutenberg books
       return (
         <>
           <div className="mb-6">
@@ -186,7 +198,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
         </>
       );
     } else if (isModernBook) {
-      // For modern books
       return (
         <>
           <div className="mb-6">
@@ -221,7 +232,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
         </>
       );
     } else {
-      // For regular books
       return renderRichSummary();
     }
   };
@@ -229,7 +239,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
   return (
     <div className="max-w-4xl mx-auto animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-        {/* Book Cover Column */}
         <div className={cn(
           "md:col-span-1 self-start",
           isMobile ? "" : "sticky top-24"
@@ -270,6 +279,7 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
             </button>
             
             <button 
+              onClick={handleShare}
               className="flex-1 py-2 rounded-r-lg border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/20 transition-colors"
             >
               <Share className="h-4 w-4 mr-2" />
@@ -278,9 +288,7 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
           </div>
         </div>
         
-        {/* Book Info Column */}
         <div className="md:col-span-2">
-          {/* Book Header */}
           <div className="mb-6">
             <div className="flex flex-wrap gap-2 mb-3">
               {book.genre.slice(0, 3).map((genre) => (
@@ -318,7 +326,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
             </div>
           </div>
           
-          {/* Book Summary */}
           <div className="mb-10">
             <h2 className="text-xl font-semibold mb-5 flex items-center">
               <ImageIcon className="h-5 w-5 mr-2 text-primary" />
@@ -329,7 +336,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
             </div>
           </div>
           
-          {/* Book Comments */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Comments</h2>
@@ -339,7 +345,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
               </div>
             </div>
             
-            {/* Comment Form */}
             <form onSubmit={handleAddComment} className="flex mb-6">
               <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground mr-3 flex-shrink-0">
                 {currentUser ? (
@@ -377,7 +382,6 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
               </div>
             )}
             
-            {/* Comments List */}
             <div className="space-y-4">
               {bookComments.map((comment) => (
                 <div key={comment.id} className="flex">
