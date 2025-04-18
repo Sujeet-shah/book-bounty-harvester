@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { generateWebsiteStructuredData, generateBookStructuredData, generateFAQStructuredData, generateBreadcrumbStructuredData } from '@/lib/seo';
+import { generateBlogStructuredData } from '@/lib/blog';
 
 interface SEOStructuredDataProps {
-  type?: 'website' | 'book' | 'faq' | 'breadcrumb';
+  type?: 'website' | 'book' | 'faq' | 'breadcrumb' | 'blogPost';
   data?: any;
   url?: string;
   breadcrumbs?: Array<{name: string, url: string}>;
@@ -34,6 +35,9 @@ const SEOStructuredData: React.FC<SEOStructuredDataProps> = ({
       case 'breadcrumb':
         if (!breadcrumbs) return generateWebsiteStructuredData(currentUrl);
         return generateBreadcrumbStructuredData(breadcrumbs, currentUrl);
+      case 'blogPost':
+        if (!data) return generateWebsiteStructuredData(currentUrl);
+        return generateBlogStructuredData(data);
       default:
         return generateWebsiteStructuredData(currentUrl);
     }

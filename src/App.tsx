@@ -23,6 +23,8 @@ import TrendingPage from './pages/TrendingPage';
 import CategoriesPage from './pages/CategoriesPage';
 import ModernBooksPage from './pages/ModernBooksPage';
 import SummaryGeneratorPage from './pages/SummaryGeneratorPage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 
 // Guards
 import UserGuard from './components/UserGuard';
@@ -83,6 +85,10 @@ function App() {
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/modern-books" element={<ModernBooksPage />} />
             <Route path="/generate-summary" element={<SummaryGeneratorPage />} />
+            
+            {/* Blog Routes */}
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
             
             {/* Protected Routes */}
             <Route path="/profile" element={<UserGuard><ProfilePage /></UserGuard>} />
