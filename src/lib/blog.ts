@@ -1,4 +1,3 @@
-
 export interface BlogPost {
   id: string;
   title: string;
@@ -11,6 +10,14 @@ export interface BlogPost {
   publishedDate: string;
   readingTime: number;
   isFeatured: boolean;
+  richContent?: ContentSection[];
+}
+
+export interface ContentSection {
+  type: 'text' | 'image' | 'quote';
+  content: string;
+  imageUrl?: string;
+  caption?: string;
 }
 
 // Sample blog data
