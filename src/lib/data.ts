@@ -21,6 +21,13 @@ export interface SummarySection {
   caption?: string;
 }
 
+export interface ContentSection {
+  type: 'text' | 'image' | 'quote';
+  content: string;
+  imageUrl?: string;
+  caption?: string;
+}
+
 export interface Book {
   id: string;
   title: string;
@@ -39,6 +46,7 @@ export interface Book {
   isTrending: boolean;
   audioSummaryUrl?: string;
   gutenbergId?: number;
+  richContent?: ContentSection[];
 }
 
 export const authors: Author[] = [

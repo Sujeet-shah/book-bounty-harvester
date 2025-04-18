@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, BookComment, comments as allComments } from '@/lib/data';
@@ -6,8 +5,8 @@ import { Heart, Bookmark, Share, MessageCircle, Star, User, Clock, Send, Image a
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import RichContentRenderer from './RichContentRenderer';
 
-// Define rich content section types
 interface ContentSection {
   type: 'text' | 'image';
   content: string;
@@ -209,7 +208,11 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
       return (
         <>
           <div className="mb-6">
-            {renderRichSummary()}
+            {book.richContent ? (
+              <RichContentRenderer sections={book.richContent} />
+            ) : (
+              <p className="leading-relaxed text-foreground mb-4">{book.summary}</p>
+            )}
             {book.genre && book.genre.length > 0 && (
               <div className="mt-4">
                 <h3 className="text-lg font-medium mb-2">Genres:</h3>
@@ -240,7 +243,11 @@ const BookDetail = ({ book, isGutenbergBook = false, isModernBook = false }: Boo
         </>
       );
     } else {
-      return renderRichSummary();
+      return book.richContent ? (
+        <RichContentRenderer sections={book.richContent} />
+      ) : (
+        renderRichSummary()
+      );
     }
   };
 
