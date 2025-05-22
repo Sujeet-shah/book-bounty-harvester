@@ -11,7 +11,7 @@ interface RichContentRendererProps {
 
 const RichContentRenderer = ({ sections, className }: RichContentRendererProps) => {
   return (
-    <div className={cn("space-y-6 max-w-3xl mx-auto", className)}>
+    <div className={cn("space-y-6", className)}>
       {sections.map((section, index) => {
         switch (section.type) {
           case 'text':
