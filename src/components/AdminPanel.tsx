@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Book, books as defaultBooks } from '@/lib/data';
 import { Search, Edit, Trash2, Plus, Book as BookIcon, Users, BarChart3, Download, ChevronDown, Star, BookOpen, Loader2, AlertCircle, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import BookForm from './BookFormAudio';
+import BookFormRich from './BookFormRich';
 import GutendexBookSearch from './GutendexBookSearch';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -359,7 +359,7 @@ const AdminPanel = () => {
               onCancel={() => setIsImporting(false)}
             />
           ) : isAdding || isEditing ? (
-            <BookForm 
+            <BookFormRich 
               book={currentBook} 
               onCancel={() => {
                 setIsAdding(false);
