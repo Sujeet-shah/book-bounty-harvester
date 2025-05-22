@@ -11,7 +11,7 @@ interface RichContentRendererProps {
 
 const RichContentRenderer = ({ sections, className }: RichContentRendererProps) => {
   return (
-    <div className={cn("space-y-8", className)}>
+    <div className={cn("space-y-6", className)}>
       {sections.map((section, index) => {
         switch (section.type) {
           case 'text':
@@ -23,7 +23,7 @@ const RichContentRenderer = ({ sections, className }: RichContentRendererProps) 
             
           case 'image':
             return (
-              <figure key={index} className="my-8">
+              <figure key={index} className="my-6">
                 <div className="aspect-video rounded-lg overflow-hidden bg-muted">
                   <img 
                     src={section.imageUrl} 
@@ -41,7 +41,7 @@ const RichContentRenderer = ({ sections, className }: RichContentRendererProps) 
             
           case 'quote':
             return (
-              <blockquote key={index} className="border-l-4 border-primary pl-4 my-8">
+              <blockquote key={index} className="border-l-4 border-primary pl-4 my-6">
                 <p className="text-xl font-serif italic text-muted-foreground">
                   "{section.content}"
                 </p>
