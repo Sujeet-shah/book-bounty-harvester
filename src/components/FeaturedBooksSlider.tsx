@@ -21,7 +21,7 @@ const FeaturedBooksSlider = ({ books }: FeaturedBooksSliderProps) => {
   }
 
   return (
-    <div className="mb-16 min-h-[400px]">
+    <div className="mb-16">
       <div className="flex items-center mb-6">
         <SlidersHorizontal className="h-5 w-5 text-primary mr-2" />
         <h2 className="text-2xl font-bold">Featured Books</h2>

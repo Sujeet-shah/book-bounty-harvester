@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -14,8 +13,7 @@ export default defineConfig(({ mode }) => ({
       "X-Frame-Options": "DENY",
       "Content-Security-Policy": "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.gutendex.com;",
       "Referrer-Policy": "strict-origin-when-cross-origin",
-      "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-      "Cache-Control": "public, max-age=31536000" // 1 year
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
     }
   },
   plugins: [
@@ -31,12 +29,12 @@ export default defineConfig(({ mode }) => ({
   base: "./",
   build: {
     // Improve sourcemaps for better debugging
-    sourcemap: mode === 'development',
+    sourcemap: true,
     // Make sure all paths are relative
     assetsInlineLimit: 0,
     // Optimize CSS
     cssCodeSplit: true,
-    // Better minification
+    // Better minification, but using esbuild instead of terser
     minify: 'esbuild',
     // Reduce chunk size for better loading
     rollupOptions: {

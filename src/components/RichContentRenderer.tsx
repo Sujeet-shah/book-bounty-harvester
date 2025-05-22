@@ -24,14 +24,11 @@ const RichContentRenderer = ({ sections, className }: RichContentRendererProps) 
           case 'image':
             return (
               <figure key={index} className="my-8">
-                <div className="rounded-lg overflow-hidden bg-muted min-h-[200px]">
+                <div className="rounded-lg overflow-hidden bg-muted">
                   <img 
                     src={section.imageUrl || ''} 
                     alt={section.caption || `Image ${index + 1}`} 
                     className="w-full h-full object-cover"
-                    loading={index === 0 ? "eager" : "lazy"}
-                    width="800"
-                    height="600"
                   />
                 </div>
                 {section.caption && (
