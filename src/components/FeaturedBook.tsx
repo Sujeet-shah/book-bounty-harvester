@@ -11,13 +11,16 @@ interface FeaturedBookProps {
 
 const FeaturedBook = ({ book, className }: FeaturedBookProps) => {
   return (
-    <div className={cn("relative overflow-hidden rounded-2xl group", className)}>
+    <div className={cn("relative overflow-hidden rounded-2xl group min-h-[300px]", className)}>
       {/* Background image with gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent">
         <img 
           src={book.coverUrl} 
           alt={book.title} 
           className="w-full h-full object-cover object-center opacity-60 group-hover:scale-105 transition-transform duration-500"
+          loading="eager"
+          width="800"
+          height="1200"
         />
       </div>
       

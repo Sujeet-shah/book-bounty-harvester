@@ -27,10 +27,12 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#ffffff" />
     <link rel="manifest" href="/manifest.json" />
+    <!-- Preload critical images -->
+    <link rel="preload" href="https://www.gutenberg.org/cache/epub/64317/pg64317.cover.medium.jpg" as="image" />
     <!-- Security headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-Frame-Options" content="DENY" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.gutendex.com;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.gutendex.com; preconnect-src https:;" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <script type="text/javascript">
       // Single Page Apps for GitHub Pages and other static hosts
@@ -53,6 +55,7 @@
     <!-- Preconnect to improve loading performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.gutendex.com" crossorigin>
     <!-- Add Inter font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   </head>
