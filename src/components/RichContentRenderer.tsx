@@ -26,7 +26,7 @@ const RichContentRenderer = ({ sections, className }: RichContentRendererProps) 
               <figure key={index} className="my-8">
                 <div className="rounded-lg overflow-hidden bg-muted">
                   <img 
-                    src={section.imageUrl} 
+                    src={section.imageUrl || ''} 
                     alt={section.caption || `Image ${index + 1}`} 
                     className="w-full h-full object-cover"
                   />

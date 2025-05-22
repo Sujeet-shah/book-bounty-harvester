@@ -47,6 +47,7 @@ export interface Book {
   audioSummaryUrl?: string;
   gutenbergId?: number;
   richContent?: ContentSection[];
+  contentSections?: ContentSection[]; // Add this property
 }
 
 export const authors: Author[] = [

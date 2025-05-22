@@ -32,7 +32,7 @@ const BookFormRich = ({ book, onCancel, onSave }: BookFormProps) => {
   const [audioSummaryUrl, setAudioSummaryUrl] = useState(book?.audioSummaryUrl || '');
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [contentSections, setContentSections] = useState<ContentSection[]>(
-    book?.contentSections || [{ type: 'text', content: book?.summary || '' }]
+    book?.contentSections || book?.richContent || [{ type: 'text', content: book?.summary || '' }]
   );
   const [activeSection, setActiveSection] = useState<number | null>(null);
   const [tempSectionContent, setTempSectionContent] = useState('');
@@ -82,7 +82,8 @@ const BookFormRich = ({ book, onCancel, onSave }: BookFormProps) => {
       isFeatured: book?.isFeatured || false,
       isTrending: book?.isTrending || false,
       audioSummaryUrl: audioSummaryUrl || undefined,
-      contentSections: contentSections
+      contentSections: contentSections,
+      richContent: contentSections
     };
     
     onSave(updatedBook);
@@ -162,7 +163,7 @@ const BookFormRich = ({ book, onCancel, onSave }: BookFormProps) => {
         newSection = { type: 'text', content: '' };
         break;
       case 'image':
-        newSection = { type: 'image', imageUrl: '', caption: '' };
+        newSection = { type: 'image', content: '', imageUrl: '', caption: '' };
         break;
       case 'quote':
         newSection = { type: 'quote', content: '', caption: '' };
