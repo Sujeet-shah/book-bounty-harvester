@@ -1,84 +1,214 @@
-
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
-import AdminPanel from '@/components/AdminPanel';
-import AdminHeader from '@/components/AdminHeader';
-import BlogManager from '@/components/BlogManager';
-import { ArrowLeft, BookOpen, FileText, Tag } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
-import SEOStructuredData from '@/components/SEOStructuredData';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect } from 'react';
+import { Book, Author, books as allBooks, authors as allAuthors } from '@/lib/data';
+import { BookComment } from '@/lib/data';
+import { useToast } from "@/hooks/use-toast"
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Plus, Edit, Trash2, ArrowLeft, ArrowRight } from 'lucide-react';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
+import BookFormRich from '@/components/BookFormRich';
+import { SummaryGeneratorService } from '@/services/summary-generator.service';
 
 const AdminPage = () => {
-  const [activeTab, setActiveTab] = useState<string>("books");
-  
+  const [books, setBooks] = useState<Book[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [showBookForm, setShowBookForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('books');
+  const [apiKey, setApiKey] = useState('');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setBooks(allBooks);
+    setAuthors(allAuthors);
+    // Load API key from local storage on component mount
+    const storedApiKey = localStorage.getItem('summaryGeneratorApiKey');
+    if (storedApiKey) {
+      setApiKey(storedApiKey);
+      SummaryGeneratorService.setApiKey(storedApiKey);
+    }
+  }, []);
+
+  const openBookForm = () => {
+    setSelectedBook(null);
+    setShowBookForm(true);
+  };
+
+  const closeBookForm = () => {
+    setShowBookForm(false);
+    setSelectedBook(null);
+  };
+
+  const handleEditBook = (book: Book) => {
+    setSelectedBook(book);
+    setShowBookForm(true);
+  };
+
+  const handleDeleteBook = (book: Book) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete "${book.title}"?`);
+    if (confirmDelete) {
+      const updatedBooks = books.filter((b) => b.id !== book.id);
+      setBooks(updatedBooks);
+    }
+  };
+
+  const handleSaveBook = (book: Book) => {
+    const isNewBook = !book.id;
+    
+    if (isNewBook) {
+      // Generate a unique ID for the new book
+      book.id = `book-${Date.now()}`;
+      setBooks([...books, book]);
+    } else {
+      // Update existing book
+      const updatedBooks = books.map((b) => (b.id === book.id ? book : b));
+      setBooks(updatedBooks);
+    }
+    
+    closeBookForm();
+    
+    toast({
+      title: isNewBook ? "Book added" : "Book updated",
+      description: isNewBook ? "Book has been successfully added." : "Book has been successfully updated.",
+    })
+  };
+
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newApiKey = e.target.value;
+    setApiKey(newApiKey);
+    // Also set the API key in the SummaryGeneratorService
+    SummaryGeneratorService.setApiKey(newApiKey);
+    // Store the API key in local storage
+    localStorage.setItem('summaryGeneratorApiKey', newApiKey);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>Admin Dashboard | Book Summary App</title>
-        <meta name="robots" content="noindex, nofollow" />
-        <meta name="description" content="Admin dashboard for managing book summaries and user content." />
-      </Helmet>
-      
-      <SEOStructuredData type="website" />
-      
-      <Navbar />
-      
-      <main className="pt-28 px-4 pb-16">
-        <div className="max-w-7xl mx-auto">
-          {/* Back navigation */}
-          <Link 
-            to="/" 
-            className="inline-flex items-center text-muted-foreground hover:text-primary mb-8 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            <span>Back to Home</span>
-          </Link>
-          
-          {/* Admin Header */}
-          <AdminHeader />
-          
-          {/* SEO Information */}
-          <div className="mb-6 p-4 border rounded-lg bg-background/80">
-            <div className="flex items-center space-x-2 mb-2">
-              <FileText className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-medium">SEO Tools</h2>
-            </div>
-            <p className="text-muted-foreground mb-2">
-              SEO data is automatically generated for each book and blog post based on the information you provide. This includes:
-            </p>
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-              <li className="flex items-center"><Tag className="h-3.5 w-3.5 mr-2 text-primary" /> Meta title and description</li>
-              <li className="flex items-center"><Tag className="h-3.5 w-3.5 mr-2 text-primary" /> OpenGraph tags for social media</li>
-              <li className="flex items-center"><Tag className="h-3.5 w-3.5 mr-2 text-primary" /> JSON-LD structured data</li>
-              <li className="flex items-center"><Tag className="h-3.5 w-3.5 mr-2 text-primary" /> SEO-friendly URLs with slugs</li>
-            </ul>
+    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList>
+          <TabsTrigger value="books">Books</TabsTrigger>
+          <TabsTrigger value="authors">Authors</TabsTrigger>
+          <TabsTrigger value="summaries">Summaries</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="books" className="mt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Books</h2>
+            <Button onClick={openBookForm}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Book
+            </Button>
           </div>
-          
-          {/* Tabs for different admin sections */}
-          <Tabs defaultValue="books" onValueChange={setActiveTab} value={activeTab}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="books" className="flex items-center">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Books
-              </TabsTrigger>
-              <TabsTrigger value="blog" className="flex items-center">
-                <FileText className="h-4 w-4 mr-2" />
-                Blog
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="books">
-              <AdminPanel />
-            </TabsContent>
-            
-            <TabsContent value="blog">
-              <BlogManager />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
+
+          <Table>
+            <TableCaption>A list of your books.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[200px]">Title</TableHead>
+                <TableHead>Author</TableHead>
+                <TableHead>Genre</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {books.map((book) => (
+                <TableRow key={book.id}>
+                  <TableCell className="font-medium">{book.title}</TableCell>
+                  <TableCell>{book.author.name}</TableCell>
+                  <TableCell>{book.genre.join(', ')}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditBook(book)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteBook(book)}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {showBookForm && (
+            <div className="mt-6">
+              <BookFormRich
+                book={selectedBook}
+                onCancel={closeBookForm}
+                onSave={handleSaveBook}
+              />
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="authors" className="mt-4">
+          <h2 className="text-2xl font-semibold mb-4">Authors</h2>
+          <Table>
+            <TableCaption>A list of your authors.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[200px]">Name</TableHead>
+                <TableHead>Bio</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {authors.map((author) => (
+                <TableRow key={author.id}>
+                  <TableCell className="font-medium">{author.name}</TableCell>
+                  <TableCell>{author.bio}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TabsContent>
+
+        <TabsContent value="summaries" className="mt-4">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Summary Generation</h2>
+            <p>Enter your API key to enable automatic summary generation for books.</p>
+            <div>
+              <Label htmlFor="api-key">API Key</Label>
+              <Input 
+                type="text" 
+                id="api-key" 
+                value={apiKey} 
+                onChange={handleApiKeyChange} 
+                className="mt-2" 
+              />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
